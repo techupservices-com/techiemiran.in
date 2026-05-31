@@ -16,7 +16,7 @@ export default async function AdminMemberDetailPage({ params }: { params: Promis
       <div className="soft-card rounded-[28px] p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="font-mono text-xs uppercase tracking-[0.24em] text-rose-700">Member record</p>
+            <p className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">Member record</p>
             <h2 className="text-3xl font-semibold">{member.fullName}</h2>
             <p className="mt-2 text-sm text-[var(--muted)]">{member.membershipId} · {member.memberType}</p>
           </div>
@@ -34,12 +34,12 @@ export default async function AdminMemberDetailPage({ params }: { params: Promis
         </div>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link href={`/admin/members/${member.id}/edit`} className="inline-flex rounded-full bg-[var(--foreground)] px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--primary-strong)]">Edit member</Link>
-          <Link href="/admin/members" className="inline-flex rounded-full border border-[var(--border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--foreground)] hover:border-rose-300 hover:bg-rose-50">Back to directory</Link>
+          <Link href="/admin/members" className="inline-flex rounded-full border border-[var(--border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]">Back to directory</Link>
         </div>
       </div>
 
       <div className="soft-card rounded-[28px] p-6">
-        <p className="font-mono text-xs uppercase tracking-[0.24em] text-rose-700">Verification review</p>
+        <p className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">Verification review</p>
         <h3 className="mt-2 text-xl font-semibold">Documents and checklist</h3>
         <p className="mt-2 text-sm leading-6 text-[var(--muted)]">This panel shows what the system has marked complete and what is still missing for full verification.</p>
         <div className="mt-4 space-y-3">

@@ -75,7 +75,7 @@ export default async function MemberDashboardPage() {
                 Follow the steps below one by one. Completed steps are clearly marked, and incomplete steps take you straight to the page where you can finish them.
               </p>
             </div>
-            <div className="rounded-[24px] border border-rose-100 bg-rose-50 px-4 py-3 text-sm leading-6 text-rose-900">
+            <div className="rounded-[24px] border border-[#d7e0f4] bg-[#eef2fb] px-4 py-3 text-sm leading-6 text-[#24345f]">
               <p className="font-medium">Registered mobile</p>
               <p className="mt-1 text-lg font-semibold">{formatMobile(member.currentMobile)}</p>
             </div>
@@ -83,7 +83,7 @@ export default async function MemberDashboardPage() {
         </div>
 
         <div className="soft-card rounded-[28px] p-6">
-          <p className="font-mono text-xs uppercase tracking-[0.24em] text-rose-700">Verification progress</p>
+          <p className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">Verification progress</p>
           <p className="mt-3 text-4xl font-semibold">{completedSteps}/{steps.length}</p>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
             {member.verification.completed
@@ -92,9 +92,9 @@ export default async function MemberDashboardPage() {
                 ? `Next step: ${nextPendingStep.title}`
                 : "Review your details below."}
           </p>
-          <div className="mt-5 h-3 overflow-hidden rounded-full bg-rose-100">
+          <div className="mt-5 h-3 overflow-hidden rounded-full bg-[#dfe6f8]">
             <div
-              className="h-full rounded-full bg-rose-600"
+              className="h-full rounded-full bg-[#3c589e]"
               style={{ width: `${Math.max(8, (completedSteps / steps.length) * 100)}%` }}
             />
           </div>
@@ -106,7 +106,7 @@ export default async function MemberDashboardPage() {
           <Link
             key={step.key}
             href={step.href}
-            className="soft-card rounded-[28px] p-6 hover:border-rose-300 hover:bg-rose-50/40"
+            className="soft-card rounded-[28px] p-6 hover:border-[#6f84ba] hover:bg-[#eef2fb]/40"
           >
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex gap-4">
