@@ -26,6 +26,9 @@ export function ProfileForm({ member }: { member: MemberWithVerification }) {
 
   return (
     <form onSubmit={onSubmit} className="grid gap-4 md:grid-cols-2">
+      <div className="md:col-span-2 rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-900">
+        Please check these fields carefully. Your profile step is marked complete only when your email, address, city, and pincode are all available.
+      </div>
       <label className="grid gap-2 text-sm text-[var(--muted)]">
         Email
         <input value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-[var(--foreground)]" />
@@ -51,7 +54,7 @@ export function ProfileForm({ member }: { member: MemberWithVerification }) {
         <input value={pincode} onChange={(e) => setPincode(e.target.value)} className="rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-[var(--foreground)]" />
       </label>
       <div className="md:col-span-2 flex items-center justify-between gap-4 pt-2">
-        <p className="text-sm text-[var(--muted)]">{message}</p>
+        <p className="text-sm text-[var(--muted)]">{message ?? "Save once all details are correct."}</p>
         <button className="rounded-2xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white hover:bg-rose-700">Save profile changes</button>
       </div>
     </form>

@@ -38,27 +38,35 @@ export function LinkedMemberManager({ members }: { members: MemberWithVerificati
                 {member.membershipId} · {formatMobile(member.currentMobile)}
               </p>
             </div>
-            <p className="max-w-sm text-sm leading-6 text-[var(--muted)]">
-              Assign a unique number for this household member. They will receive their own WhatsApp verification OTP.
-            </p>
+            {!member.mobileVerified ? (
+              <p className="max-w-sm text-sm leading-6 text-[var(--muted)]">
+                Assign a unique number for this household member. They will receive their own WhatsApp verification OTP.
+              </p>
+            ) : (
+              <p className="max-w-sm text-sm leading-6 text-[var(--muted)]">
+                This member already has a verified number, so no more action is needed here.
+              </p>
+            )}
           </div>
 
-          <form
-            className="mt-4 flex flex-col gap-3 md:flex-row"
-            action={(formData) => {
-              void onAssign(member.id, formData);
-            }}
-          >
-            <input
-              name="newMobile"
-              placeholder="Enter new mobile number"
-              className="min-w-0 flex-1 rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-[var(--foreground)]"
-              required
-            />
-            <button className="rounded-2xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white hover:bg-rose-700">
-              Send member OTP
-            </button>
-          </form>
+          {!member.mobileVerified ? (
+            <form
+              className="mt-4 flex flex-col gap-3 md:flex-row"
+              action={(formData) => {
+                void onAssign(member.id, formData);
+              }}
+            >
+              <input
+                name="newMobile"
+                placeholder="Enter new mobile number"
+                className="min-w-0 flex-1 rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-[var(--foreground)]"
+                required
+              />
+              <button className="rounded-2xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white hover:bg-rose-700">
+                Send member OTP
+              </button>
+            </form>
+          ) : null}
 
           {messages[member.id] ? (
             <p className="mt-3 text-sm text-[var(--muted)]">{messages[member.id]}</p>

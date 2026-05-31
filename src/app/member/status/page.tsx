@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getMemberSession } from "@/lib/auth";
 import { getMemberById } from "@/lib/data";
 import { StatusChip } from "@/components/shared/status-chip";
@@ -8,10 +9,10 @@ export default async function MemberStatusPage() {
   if (!member) return null;
 
   const items = [
-    { label: "Unique mobile verified", done: member.verification.mobileVerified },
-    { label: "Profile details completed", done: member.verification.profileConfirmed },
-    { label: "Selfie uploaded", done: member.verification.selfieUploaded },
-    { label: "Supporting document uploaded", done: member.verification.documentUploaded },
+    { label: "Unique mobile verified", done: member.verification.mobileVerified, href: "/member/mobile", action: "Review mobile" },
+    { label: "Profile details completed", done: member.verification.profileConfirmed, href: "/member/profile", action: member.verification.profileConfirmed ? "Review profile" : "Complete profile" },
+    { label: "Selfie uploaded", done: member.verification.selfieUploaded, href: "/member/uploads", action: member.verification.selfieUploaded ? "Review uploads" : "Upload selfie" },
+    { label: "Supporting document uploaded", done: member.verification.documentUploaded, href: "/member/uploads", action: member.verification.documentUploaded ? "Review uploads" : "Upload document" },
   ];
 
   return (
@@ -25,10 +26,13 @@ export default async function MemberStatusPage() {
       </div>
       <div className="mt-6 grid gap-3">
         {items.map((item) => (
-          <div key={item.label} className="rounded-[22px] border border-[var(--border)] bg-white px-4 py-4 flex items-center justify-between gap-3">
-            <p className="font-medium">{item.label}</p>
+          <Link key={item.label} href={item.href} className="rounded-[22px] border border-[var(--border)] bg-white px-4 py-4 flex items-center justify-between gap-3 hover:border-rose-300 hover:bg-rose-50/40">
+            <div>
+              <p className="font-medium">{item.label}</p>
+              <p className="mt-1 text-sm text-[var(--muted)]">{item.action}</p>
+            </div>
             <StatusChip label={item.done ? "Done" : "Pending"} tone={item.done ? "success" : "warning"} />
-          </div>
+          </Link>
         ))}
       </div>
     </section>
