@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AvatarBadge } from "@/components/shared/avatar-badge";
 import { StatusChip } from "@/components/shared/status-chip";
 import { getMemberById, listDocuments } from "@/lib/data";
 import { formatDate, formatMobile } from "@/lib/utils";
@@ -14,11 +15,14 @@ export default async function AdminMemberDetailPage({ params }: { params: Promis
   return (
     <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
       <div className="soft-card rounded-[28px] p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <AvatarBadge name={member.fullName} photoUrl={member.photoUrl} />
+            <div>
             <p className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">Member record</p>
             <h2 className="text-3xl font-semibold">{member.fullName}</h2>
             <p className="mt-2 text-sm text-[var(--muted)]">{member.membershipId} · {member.memberType}</p>
+            </div>
           </div>
           <StatusChip label={member.verification.completed ? "Verified" : "In progress"} tone={member.verification.completed ? "success" : "warning"} />
         </div>

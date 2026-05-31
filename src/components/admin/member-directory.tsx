@@ -150,7 +150,7 @@ export function MemberDirectory({ members }: { members: MemberWithVerification[]
         {pagedMembers.map((member) => (
           <article key={member.id} className={cn("soft-card rounded-[24px] p-5", view === "list" && "md:flex md:items-start md:justify-between md:gap-6")}>
             <div className="flex gap-4">
-              <AvatarBadge name={member.fullName} />
+              <AvatarBadge name={member.fullName} photoUrl={member.photoUrl} />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-lg font-semibold text-[var(--foreground)]">{member.fullName}</h3>

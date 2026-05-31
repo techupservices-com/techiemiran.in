@@ -125,6 +125,30 @@ function mapAudit(row: AuditRow): AuditLog {
   };
 }
 
+async function resolveMemberPhotoUrl(
+  client: ReturnType<typeof getRequiredSupabaseClient>,
+  profileId: string,
+  photoUrl: string | null,
+  documents: DocumentRow[],
+) {
+  if (photoUrl?.startsWith("http://") || photoUrl?.startsWith("https://")) {
+    return photoUrl;
+  }
+
+  const selfie = documents.find(
+    (document) => document.profile_id === profileId && document.document_type === "selfie",
+  );
+  const storagePath = photoUrl || selfie?.file_path;
+
+  if (!storagePath) return undefined;
+
+  const { data, error } = await client.storage
+    .from(SELFIE_BUCKET)
+    .createSignedUrl(storagePath, 60 * 60);
+  if (error || !data?.signedUrl) return undefined;
+  return data.signedUrl;
+}
+
 async function getProfilesAndDocuments() {
   const client = getRequiredSupabaseClient();
 
@@ -147,20 +171,24 @@ async function getProfilesAndDocuments() {
   };
 }
 
-function buildMembersWithVerification(profiles: ProfileRow[], documents: DocumentRow[]) {
-  return profiles.map((row) => {
+async function buildMembersWithVerification(profiles: ProfileRow[], documents: DocumentRow[]) {
+  const client = getRequiredSupabaseClient();
+
+  return Promise.all(profiles.map(async (row) => {
     const profile = mapProfile(row);
     const memberDocuments = documents.filter((document) => document.profile_id === row.id).map(mapDocument);
     const linkedMemberCount = profiles.filter(
       (candidate) => normalizeMobile(candidate.current_mobile ?? "") === normalizeMobile(row.current_mobile ?? ""),
     ).length;
+    const resolvedPhotoUrl = await resolveMemberPhotoUrl(client, row.id, row.photo_url, documents);
 
     return {
       ...profile,
+      photoUrl: resolvedPhotoUrl,
       linkedMemberCount,
       verification: computeVerification(profile, memberDocuments),
     } satisfies MemberWithVerification;
-  });
+  }));
 }
 
 function toProfileUpdates(updates: Partial<MemberProfile>) {
@@ -186,7 +214,7 @@ function isUuid(value: string) {
 
 export async function listMembersWithVerification() {
   const result = await getProfilesAndDocuments();
-  return buildMembersWithVerification(result.profiles, result.documents);
+  return await buildMembersWithVerification(result.profiles, result.documents);
 }
 
 export async function getMemberById(id: string) {
@@ -288,6 +316,13 @@ export async function uploadMemberDocument(
 
   if (error || !data) throw error ?? new Error("Unable to save uploaded file metadata.");
 
+  if (documentType === "selfie") {
+    await client
+      .from("profiles")
+      .update({ photo_url: filePath, updated_at: new Date().toISOString() })
+      .eq("id", profileId);
+  }
+
   return mapDocument(data as DocumentRow);
 }
 
@@ -304,20 +339,22 @@ export async function listDocuments(profileId: string) {
 }
 
 export async function getMemberProfilePhotoUrl(profileId: string, photoUrl?: string) {
-  if (photoUrl?.startsWith("http://") || photoUrl?.startsWith("https://")) {
-    return photoUrl;
-  }
-
   const client = getRequiredSupabaseClient();
   const documents = await listDocuments(profileId);
-  const selfie = documents.find((document) => document.documentType === "selfie");
-  const storagePath = photoUrl || selfie?.filePath;
-
-  if (!storagePath) return null;
-
-  const { data, error } = await client.storage.from(SELFIE_BUCKET).createSignedUrl(storagePath, 60 * 60);
-  if (error || !data?.signedUrl) return null;
-  return data.signedUrl;
+  return (await resolveMemberPhotoUrl(
+    client,
+    profileId,
+    photoUrl ?? null,
+    documents.map((document) => ({
+      id: document.id,
+      profile_id: document.profileId,
+      document_type: document.documentType,
+      file_path: document.filePath,
+      file_name: document.fileName,
+      mime_type: document.mimeType,
+      uploaded_at: document.uploadedAt,
+    })),
+  )) ?? null;
 }
 
 export async function createMobileChangeRequest(input: Omit<MobileChangeRequest, "id" | "createdAt">) {

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AvatarBadge } from "@/components/shared/avatar-badge";
 import { listAuditLogs, listMembersWithVerification } from "@/lib/data";
 
 export default async function AdminOverviewPage() {
@@ -27,8 +28,13 @@ export default async function AdminOverviewPage() {
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             {members.slice(0, 4).map((member) => (
               <div key={member.id} className="rounded-[24px] border border-[var(--border)] bg-white px-4 py-4">
-                <p className="font-semibold">{member.fullName}</p>
-                <p className="mt-1 text-sm text-[var(--muted)]">{member.membershipId} · {member.currentMobile}</p>
+                <div className="flex items-center gap-3">
+                  <AvatarBadge name={member.fullName} photoUrl={member.photoUrl} />
+                  <div>
+                    <p className="font-semibold">{member.fullName}</p>
+                    <p className="mt-1 text-sm text-[var(--muted)]">{member.membershipId} · {member.currentMobile}</p>
+                  </div>
+                </div>
               </div>
             ))}
           </div>

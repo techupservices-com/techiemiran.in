@@ -1,9 +1,14 @@
+import Image from "next/image";
 import { getInitials } from "@/lib/utils";
 
-export function AvatarBadge({ name }: { name: string }) {
+export function AvatarBadge({ name, photoUrl }: { name: string; photoUrl?: string }) {
   return (
-    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#d7e0f4] via-[#eef2fb] to-white text-lg font-semibold text-[#24345f] shadow-sm">
-      {getInitials(name)}
+    <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#d7e0f4] via-[#eef2fb] to-white text-lg font-semibold text-[#24345f] shadow-sm ring-1 ring-[#c8d3ea]">
+      {photoUrl ? (
+        <Image src={photoUrl} alt={`${name} profile`} fill unoptimized className="object-cover" />
+      ) : (
+        <span className="relative z-10">{getInitials(name)}</span>
+      )}
     </div>
   );
 }
