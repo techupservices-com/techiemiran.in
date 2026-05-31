@@ -13,17 +13,29 @@ export async function POST(request: Request) {
   }
 
   const { record, code } = await createOtp(member.id, member.currentMobile, "login");
-  const delivery = await sendOtpMessage({
-    mobile: member.currentMobile,
-    otp: code,
-    memberName: member.fullName,
-    purpose: "login",
-    clientReference: record.id,
-  });
+  try {
+    const delivery = await sendOtpMessage({
+      mobile: member.currentMobile,
+      otp: code,
+      memberName: member.fullName,
+      purpose: "login",
+      clientReference: record.id,
+    });
 
-  return Response.json({
-    profileId: member.id,
-    mobile: member.currentMobile,
-    previewCode: "previewCode" in delivery ? delivery.previewCode : undefined,
-  });
+    return Response.json({
+      profileId: member.id,
+      mobile: member.currentMobile,
+      previewCode: "previewCode" in delivery ? delivery.previewCode : undefined,
+    });
+  } catch (error) {
+    return Response.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to send OTP through WhatsApp provider.",
+      },
+      { status: 502 },
+    );
+  }
 }

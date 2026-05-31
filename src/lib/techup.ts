@@ -8,10 +8,26 @@ interface SendOtpMessageInput {
   clientReference: string;
 }
 
+function buildTemplateVariables(input: SendOtpMessageInput) {
+  if ((process.env.TECHUP_TEMPLATE_NAME ?? "").trim() === "follow_up_template") {
+    return {
+      1: input.memberName,
+      2: `Poona Club OTP ${input.otp}`,
+    };
+  }
+
+  return {
+    1: input.otp,
+    2: "Poona Club",
+    3: input.memberName,
+  };
+}
+
 export async function sendOtpMessage(input: SendOtpMessageInput) {
   const apiKey = process.env.TECHUP_API_KEY;
   const endpoint = "https://api.techupservices.in/api/v1/messages/send";
   const templateName = process.env.TECHUP_TEMPLATE_NAME ?? "club_login_otp";
+  const templateLanguage = process.env.TECHUP_TEMPLATE_LANGUAGE ?? "en_US";
 
   if (!apiKey) {
     await sleep(300);
@@ -35,12 +51,8 @@ export async function sendOtpMessage(input: SendOtpMessageInput) {
       type: "template",
       template: {
         name: templateName,
-        language: "en",
-        variables: {
-          1: input.otp,
-          2: "10",
-          3: input.memberName,
-        },
+        language: templateLanguage,
+        variables: buildTemplateVariables(input),
       },
       client_reference: input.clientReference,
     }),
@@ -49,6 +61,12 @@ export async function sendOtpMessage(input: SendOtpMessageInput) {
   const payload = await response.json();
   if (!response.ok) {
     throw new Error(payload?.message ?? "TechUpServices send failed.");
+  }
+
+  if (!payload.accepted_count) {
+    const firstFailure = payload.results?.[0];
+    const message = firstFailure?.details || firstFailure?.message || "TechUpServices rejected the template send.";
+    throw new Error(message);
   }
 
   return {
