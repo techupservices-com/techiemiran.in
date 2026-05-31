@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { OTP_RESEND_SECONDS } from "@/lib/constants";
+import { formatMobile } from "@/lib/utils";
 
 export function MemberOtpForm() {
   const router = useRouter();
@@ -9,10 +11,46 @@ export function MemberOtpForm() {
   const [otp, setOtp] = useState(searchParams.get("previewCode") ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const previewCode = searchParams.get("previewCode") ?? "";
-
-  const profileId = searchParams.get("profileId") ?? "";
+  const [isResending, setIsResending] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(OTP_RESEND_SECONDS);
+  const [previewCode, setPreviewCode] = useState(searchParams.get("previewCode") ?? "");
+  const [profileId, setProfileId] = useState(searchParams.get("profileId") ?? "");
+  const [mobile, setMobile] = useState(searchParams.get("mobile") ?? "");
   const identifier = searchParams.get("identifier") ?? "";
+
+  useEffect(() => {
+    if (secondsLeft <= 0) return;
+
+    const timer = window.setTimeout(() => {
+      setSecondsLeft((current) => current - 1);
+    }, 1000);
+
+    return () => window.clearTimeout(timer);
+  }, [secondsLeft]);
+
+  async function onResendOtp() {
+    setError(null);
+    setIsResending(true);
+
+    const response = await fetch("/api/member/auth/request-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier }),
+    });
+    const payload = await response.json();
+    setIsResending(false);
+
+    if (!response.ok) {
+      setError(payload.error ?? "Unable to resend OTP.");
+      return;
+    }
+
+    setProfileId(payload.profileId);
+    setMobile(payload.mobile);
+    setPreviewCode(payload.previewCode ?? "");
+    setOtp(payload.previewCode ?? "");
+    setSecondsLeft(OTP_RESEND_SECONDS);
+  }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -38,6 +76,22 @@ export function MemberOtpForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-5">
+      <div className="rounded-[22px] border border-[var(--border)] bg-rose-50/70 px-4 py-4 text-sm leading-6 text-rose-900">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <span className="font-mono text-xs uppercase tracking-[0.24em] text-rose-700">Sending OTP to</span>
+            <p className="mt-2 text-lg font-semibold">{formatMobile(mobile || identifier)}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push(`/login/member?identifier=${encodeURIComponent(identifier)}`)}
+            className="rounded-full border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-700 hover:border-rose-300 hover:bg-rose-100"
+          >
+            Edit
+          </button>
+        </div>
+      </div>
+
       {previewCode ? (
         <div className="rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-800">
           Demo mode preview code: <span className="font-mono font-semibold tracking-[0.2em]">{previewCode}</span>
@@ -61,6 +115,21 @@ export function MemberOtpForm() {
       </div>
 
       {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+
+      <div className="rounded-[22px] border border-[var(--border)] bg-white px-4 py-4 text-sm text-[var(--muted)]">
+        {secondsLeft > 0 ? (
+          <p>Resend OTP available in {secondsLeft}s</p>
+        ) : (
+          <button
+            type="button"
+            onClick={onResendOtp}
+            disabled={isResending}
+            className="font-semibold text-rose-700 hover:text-rose-800 disabled:opacity-60"
+          >
+            {isResending ? "Resending OTP..." : "Resend OTP"}
+          </button>
+        )}
+      </div>
 
       <button
         type="submit"

@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export function MemberLoginForm() {
+export function MemberLoginForm({ initialIdentifier = "" }: { initialIdentifier?: string }) {
   const router = useRouter();
-  const [identifier, setIdentifier] = useState("");
+  const [identifier, setIdentifier] = useState(initialIdentifier);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 

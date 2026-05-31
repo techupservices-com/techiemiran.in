@@ -1,6 +1,12 @@
 import { MemberLoginForm } from "@/components/auth/member-login-form";
 
-export default function MemberLoginPage() {
+export default async function MemberLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ identifier?: string }>;
+}) {
+  const params = await searchParams;
+
   return (
     <div className="min-h-screen px-4 py-6 md:px-6">
       <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[1.05fr_0.95fr]">
@@ -37,7 +43,7 @@ export default function MemberLoginPage() {
           <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em]">Access your account</h2>
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">Use your existing club membership details. In demo mode, the OTP appears on the next screen if live API keys are not configured.</p>
           <div className="mt-6">
-            <MemberLoginForm />
+            <MemberLoginForm initialIdentifier={params.identifier ?? ""} />
           </div>
         </section>
       </div>
