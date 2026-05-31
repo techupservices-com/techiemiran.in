@@ -1,17 +1,14 @@
 import { OTP_EXPIRY_MINUTES } from "@/lib/constants";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { generateId, hashValue } from "@/lib/utils";
+import { hashValue } from "@/lib/utils";
 import type { OtpRecord, VerificationPurpose } from "@/lib/types";
 
-declare global {
-  var __POONA_OTP_STATE__: OtpRecord[] | undefined;
-}
-
-function getStore() {
-  if (!globalThis.__POONA_OTP_STATE__) {
-    globalThis.__POONA_OTP_STATE__ = [];
+function getRequiredSupabaseClient() {
+  const client = createServerSupabaseClient();
+  if (!client) {
+    throw new Error("Supabase environment variables are missing.");
   }
-  return globalThis.__POONA_OTP_STATE__;
+  return client;
 }
 
 function mapOtpRecord(record: {
@@ -48,61 +45,36 @@ export async function createOtp(
   purpose: VerificationPurpose,
   referenceId?: string,
 ) {
-  const client = createServerSupabaseClient();
-  const store = getStore();
+  const client = getRequiredSupabaseClient();
   const code = `${Math.floor(100000 + Math.random() * 900000)}`;
   const createdAt = new Date();
   const expiresAt = new Date(createdAt.getTime() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
-  if (client) {
-    await client
-      .from("otp_requests")
-      .update({ verify_status: "expired" })
-      .eq("profile_id", profileId)
-      .eq("purpose", purpose)
-      .eq("verify_status", "pending");
+  await client
+    .from("otp_requests")
+    .update({ verify_status: "expired" })
+    .eq("profile_id", profileId)
+    .eq("purpose", purpose)
+    .eq("verify_status", "pending");
 
-    const payload = {
-      profile_id: profileId,
-      mobile,
-      purpose,
-      otp_hash: hashValue(code),
-      expires_at: expiresAt.toISOString(),
-      attempt_count: 0,
-      max_attempts: 5,
-      verify_status: "pending",
-      request_id: referenceId ?? null,
-      client_reference: referenceId ?? null,
-    };
-    const { data, error } = await client.from("otp_requests").insert(payload).select("*").single();
-
-    if (!error && data) {
-      return { record: mapOtpRecord(data), code };
-    }
-  }
-
-  for (const entry of store) {
-    if (entry.profileId === profileId && entry.purpose === purpose && entry.status === "pending") {
-      entry.status = "expired";
-    }
-  }
-
-  const record: OtpRecord = {
-    id: generateId("otp"),
-    profileId,
+  const payload = {
+    profile_id: profileId,
     mobile,
     purpose,
-    otpHash: hashValue(code),
-    expiresAt: expiresAt.toISOString(),
-    createdAt: createdAt.toISOString(),
-    attemptCount: 0,
-    maxAttempts: 5,
-    status: "pending",
-    referenceId,
+    otp_hash: hashValue(code),
+    expires_at: expiresAt.toISOString(),
+    attempt_count: 0,
+    max_attempts: 5,
+    verify_status: "pending",
+    request_id: referenceId ?? null,
+    client_reference: referenceId ?? null,
   };
+  const { data, error } = await client.from("otp_requests").insert(payload).select("*").single();
+  if (error || !data) {
+    throw error ?? new Error("Unable to create OTP record.");
+  }
 
-  store.push(record);
-  return { record, code };
+  return { record: mapOtpRecord(data), code };
 }
 
 export async function verifyOtp(
@@ -111,83 +83,54 @@ export async function verifyOtp(
   code: string,
   referenceId?: string,
 ) {
-  const client = createServerSupabaseClient();
-  if (client) {
-    let query = client
-      .from("otp_requests")
-      .select("*")
-      .eq("profile_id", profileId)
-      .eq("purpose", purpose)
-      .eq("verify_status", "pending")
-      .order("created_at", { ascending: false })
-      .limit(1);
+  const client = getRequiredSupabaseClient();
+  let query = client
+    .from("otp_requests")
+    .select("*")
+    .eq("profile_id", profileId)
+    .eq("purpose", purpose)
+    .eq("verify_status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(1);
 
-    if (referenceId) {
-      query = query.eq("request_id", referenceId);
-    }
-
-    const { data, error } = await query.maybeSingle();
-    if (!error && data) {
-      const record = mapOtpRecord(data);
-      if (new Date(record.expiresAt).getTime() < Date.now()) {
-        await client.from("otp_requests").update({ verify_status: "expired" }).eq("id", record.id);
-        return { ok: false, reason: "OTP has expired." };
-      }
-
-      const attemptCount = record.attemptCount + 1;
-      const expired = attemptCount > record.maxAttempts;
-      if (expired) {
-        await client
-          .from("otp_requests")
-          .update({ attempt_count: attemptCount, verify_status: "expired" })
-          .eq("id", record.id);
-        return { ok: false, reason: "Too many attempts." };
-      }
-
-      if (record.otpHash !== hashValue(code)) {
-        await client.from("otp_requests").update({ attempt_count: attemptCount }).eq("id", record.id);
-        return { ok: false, reason: "Incorrect OTP." };
-      }
-
-      const verifiedAt = new Date().toISOString();
-      await client
-        .from("otp_requests")
-        .update({ attempt_count: attemptCount, verify_status: "verified", verified_at: verifiedAt })
-        .eq("id", record.id);
-      return { ok: true, record: { ...record, attemptCount, status: "verified" as const } };
-    }
+  if (referenceId) {
+    query = query.eq("request_id", referenceId);
   }
 
-  const store = getStore();
-  const record = [...store]
-    .reverse()
-    .find(
-      (entry) =>
-        entry.profileId === profileId &&
-        entry.purpose === purpose &&
-        entry.status === "pending" &&
-        (!referenceId || entry.referenceId === referenceId),
-    );
+  const { data, error } = await query.maybeSingle();
+  if (error) {
+    throw error;
+  }
 
-  if (!record) {
+  if (!data) {
     return { ok: false, reason: "No pending OTP found." };
   }
 
+  const record = mapOtpRecord(data);
+
   if (new Date(record.expiresAt).getTime() < Date.now()) {
-    record.status = "expired";
+    await client.from("otp_requests").update({ verify_status: "expired" }).eq("id", record.id);
     return { ok: false, reason: "OTP has expired." };
   }
 
-  record.attemptCount += 1;
-  if (record.attemptCount > record.maxAttempts) {
-    record.status = "expired";
+  const attemptCount = record.attemptCount + 1;
+  if (attemptCount > record.maxAttempts) {
+    await client
+      .from("otp_requests")
+      .update({ attempt_count: attemptCount, verify_status: "expired" })
+      .eq("id", record.id);
     return { ok: false, reason: "Too many attempts." };
   }
 
   if (record.otpHash !== hashValue(code)) {
+    await client.from("otp_requests").update({ attempt_count: attemptCount }).eq("id", record.id);
     return { ok: false, reason: "Incorrect OTP." };
   }
 
-  record.status = "verified";
-  return { ok: true, record };
+  const verifiedAt = new Date().toISOString();
+  await client
+    .from("otp_requests")
+    .update({ attempt_count: attemptCount, verify_status: "verified", verified_at: verifiedAt })
+    .eq("id", record.id);
+  return { ok: true, record: { ...record, attemptCount, status: "verified" } };
 }

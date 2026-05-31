@@ -1,15 +1,3 @@
-import {
-  addAuditLog as addMockAuditLog,
-  addDocument as addMockDocument,
-  completeMobileChangeRequest as completeMockMobileChangeRequest,
-  createMobileChangeRequest as createMockMobileChangeRequest,
-  findMemberByIdentifier as findMockMemberByIdentifier,
-  getMobileChangeRequest as getMockMobileChangeRequest,
-  listAuditLogs as listMockAuditLogs,
-  listDocuments as listMockDocuments,
-  listMembersWithVerification as listMockMembersWithVerification,
-  updateMember as updateMockMember,
-} from "@/lib/mock-store";
 import { DOCUMENT_BUCKET, SELFIE_BUCKET } from "@/lib/constants";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { AuditLog, MemberDocument, MemberProfile, MemberWithVerification, MobileChangeRequest } from "@/lib/types";
@@ -68,7 +56,13 @@ interface AuditRow {
   created_at: string;
 }
 
-let supabaseAvailability: boolean | null = null;
+function getRequiredSupabaseClient() {
+  const client = createServerSupabaseClient();
+  if (!client) {
+    throw new Error("Supabase environment variables are missing.");
+  }
+  return client;
+}
 
 function mapProfile(row: ProfileRow): MemberProfile {
   return {
@@ -131,35 +125,25 @@ function mapAudit(row: AuditRow): AuditLog {
   };
 }
 
-async function hasSupabaseData() {
-  if (supabaseAvailability !== null) return supabaseAvailability;
-  const client = createServerSupabaseClient();
-  if (!client) {
-    supabaseAvailability = false;
-    return false;
-  }
-
-  const { error } = await client.from("profiles").select("id").limit(1);
-  supabaseAvailability = !error;
-  return supabaseAvailability;
-}
-
 async function getProfilesAndDocuments() {
-  const client = createServerSupabaseClient();
-  if (!client || !(await hasSupabaseData())) return null;
+  const client = getRequiredSupabaseClient();
 
   const [{ data: profiles, error: profilesError }, { data: documents, error: documentsError }] = await Promise.all([
     client.from("profiles").select("*").order("full_name"),
     client.from("member_documents").select("*"),
   ]);
 
-  if (profilesError || documentsError || !profiles || !documents) {
-    return null;
+  if (profilesError) {
+    throw profilesError;
+  }
+
+  if (documentsError) {
+    throw documentsError;
   }
 
   return {
-    profiles: profiles as ProfileRow[],
-    documents: documents as DocumentRow[],
+    profiles: (profiles ?? []) as ProfileRow[],
+    documents: (documents ?? []) as DocumentRow[],
   };
 }
 
@@ -202,7 +186,6 @@ function isUuid(value: string) {
 
 export async function listMembersWithVerification() {
   const result = await getProfilesAndDocuments();
-  if (!result) return listMockMembersWithVerification();
   return buildMembersWithVerification(result.profiles, result.documents);
 }
 
@@ -212,8 +195,7 @@ export async function getMemberById(id: string) {
 }
 
 export async function findMemberByIdentifier(identifier: string) {
-  const client = createServerSupabaseClient();
-  if (!client || !(await hasSupabaseData())) return findMockMemberByIdentifier(identifier);
+  const client = getRequiredSupabaseClient();
 
   const normalized = normalizeMobile(identifier);
   const value = identifier.trim();
@@ -224,7 +206,11 @@ export async function findMemberByIdentifier(identifier: string) {
     .limit(1)
     .maybeSingle();
 
-  if (error || !data) return findMockMemberByIdentifier(identifier);
+  if (error) {
+    throw error;
+  }
+
+  if (!data) return null;
   return mapProfile(data as ProfileRow);
 }
 
@@ -238,11 +224,10 @@ export async function getLinkedMembers(profileId: string) {
 }
 
 export async function updateMember(profileId: string, updates: Partial<MemberProfile>) {
-  const client = createServerSupabaseClient();
-  if (!client || !(await hasSupabaseData())) return updateMockMember(profileId, updates);
+  const client = getRequiredSupabaseClient();
 
   const { error } = await client.from("profiles").update(toProfileUpdates(updates)).eq("id", profileId);
-  if (error) return updateMockMember(profileId, updates);
+  if (error) throw error;
   return getMemberById(profileId);
 }
 
@@ -252,10 +237,7 @@ export async function addDocument(
   fileName: string,
   mimeType: string,
 ) {
-  const client = createServerSupabaseClient();
-  if (!client || !(await hasSupabaseData())) {
-    return addMockDocument(profileId, documentType, fileName, mimeType);
-  }
+  const client = getRequiredSupabaseClient();
 
   await client.from("member_documents").delete().eq("profile_id", profileId).eq("document_type", documentType);
   const payload = {
@@ -266,7 +248,7 @@ export async function addDocument(
     mime_type: mimeType,
   };
   const { data, error } = await client.from("member_documents").insert(payload).select("*").single();
-  if (error || !data) return addMockDocument(profileId, documentType, fileName, mimeType);
+  if (error || !data) throw error ?? new Error("Unable to save document metadata.");
   return mapDocument(data as DocumentRow);
 }
 
@@ -277,10 +259,7 @@ export async function uploadMemberDocument(
   mimeType: string,
   bytes: ArrayBuffer,
 ) {
-  const client = createServerSupabaseClient();
-  if (!client || !(await hasSupabaseData())) {
-    return addMockDocument(profileId, documentType, fileName, mimeType);
-  }
+  const client = getRequiredSupabaseClient();
 
   const bucket = documentType === "selfie" ? SELFIE_BUCKET : DOCUMENT_BUCKET;
   const filePath = `${profileId}/${documentType}/${generateId("upload")}-${fileName.replace(/\s+/g, "-")}`;
@@ -292,9 +271,7 @@ export async function uploadMemberDocument(
       upsert: true,
     });
 
-  if (uploadError) {
-    return addMockDocument(profileId, documentType, fileName, mimeType);
-  }
+  if (uploadError) throw uploadError;
 
   await client.from("member_documents").delete().eq("profile_id", profileId).eq("document_type", documentType);
   const { data, error } = await client
@@ -309,29 +286,25 @@ export async function uploadMemberDocument(
     .select("*")
     .single();
 
-  if (error || !data) {
-    return addMockDocument(profileId, documentType, fileName, mimeType);
-  }
+  if (error || !data) throw error ?? new Error("Unable to save uploaded file metadata.");
 
   return mapDocument(data as DocumentRow);
 }
 
 export async function listDocuments(profileId: string) {
-  const client = createServerSupabaseClient();
-  if (!client || !(await hasSupabaseData())) return listMockDocuments(profileId);
+  const client = getRequiredSupabaseClient();
 
   const { data, error } = await client
     .from("member_documents")
     .select("*")
     .eq("profile_id", profileId)
     .order("uploaded_at", { ascending: false });
-  if (error || !data) return listMockDocuments(profileId);
+  if (error) throw error;
   return (data as DocumentRow[]).map(mapDocument);
 }
 
 export async function createMobileChangeRequest(input: Omit<MobileChangeRequest, "id" | "createdAt">) {
-  const client = createServerSupabaseClient();
-  if (!client || !(await hasSupabaseData())) return createMockMobileChangeRequest(input);
+  const client = getRequiredSupabaseClient();
 
   const payload = {
     profile_id: input.profileId,
@@ -341,7 +314,7 @@ export async function createMobileChangeRequest(input: Omit<MobileChangeRequest,
     requested_by_profile_id: input.requestedByProfileId || null,
   };
   const { data, error } = await client.from("mobile_change_requests").insert(payload).select("*").single();
-  if (error || !data) return createMockMobileChangeRequest(input);
+  if (error || !data) throw error ?? new Error("Unable to create mobile change request.");
   return {
     ...mapMobileChange(data as MobileChangeRow),
     purpose: input.purpose,
@@ -349,17 +322,16 @@ export async function createMobileChangeRequest(input: Omit<MobileChangeRequest,
 }
 
 export async function getMobileChangeRequest(id: string) {
-  const client = createServerSupabaseClient();
-  if (!client || !(await hasSupabaseData())) return getMockMobileChangeRequest(id);
+  const client = getRequiredSupabaseClient();
 
   const { data, error } = await client.from("mobile_change_requests").select("*").eq("id", id).maybeSingle();
-  if (error || !data) return getMockMobileChangeRequest(id);
+  if (error) throw error;
+  if (!data) return null;
   return mapMobileChange(data as MobileChangeRow);
 }
 
 export async function completeMobileChangeRequest(id: string) {
-  const client = createServerSupabaseClient();
-  if (!client || !(await hasSupabaseData())) return completeMockMobileChangeRequest(id);
+  const client = getRequiredSupabaseClient();
 
   const request = await getMobileChangeRequest(id);
   if (!request) return null;
@@ -381,25 +353,21 @@ export async function completeMobileChangeRequest(id: string) {
       .eq("id", request.profileId),
   ]);
 
-  if (requestError || profileError) return completeMockMobileChangeRequest(id);
+  if (requestError) throw requestError;
+  if (profileError) throw profileError;
   return { ...request, status: "verified", verifiedAt };
 }
 
 export async function listAuditLogs() {
-  const client = createServerSupabaseClient();
-  if (!client || !(await hasSupabaseData())) return listMockAuditLogs();
+  const client = getRequiredSupabaseClient();
 
   const { data, error } = await client.from("audit_logs").select("*").order("created_at", { ascending: false });
-  if (error || !data) return listMockAuditLogs();
-  return (data as AuditRow[]).map(mapAudit);
+  if (error) throw error;
+  return ((data ?? []) as AuditRow[]).map(mapAudit);
 }
 
 export async function addAuditLog(log: Omit<AuditLog, "id" | "createdAt">) {
-  const client = createServerSupabaseClient();
-  if (!client || !(await hasSupabaseData())) {
-    addMockAuditLog(log);
-    return;
-  }
+  const client = getRequiredSupabaseClient();
 
   const payload = {
     actor_type: log.actorType,
@@ -410,11 +378,13 @@ export async function addAuditLog(log: Omit<AuditLog, "id" | "createdAt">) {
   };
 
   const { error } = await client.from("audit_logs").insert(payload);
-  if (error) addMockAuditLog(log);
+  if (error) throw error;
 }
 
 export async function seedImportTargetReady() {
-  return hasSupabaseData();
+  const client = getRequiredSupabaseClient();
+  const { error } = await client.from("profiles").select("id").limit(1);
+  return !error;
 }
 
 export function createSyntheticDocumentPath(profileId: string, documentType: string, fileName: string) {
