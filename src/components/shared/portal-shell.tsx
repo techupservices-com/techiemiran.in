@@ -69,14 +69,6 @@ export function PortalShell({
         </header>
 
         <div className="flex flex-wrap gap-3">
-          {pathname !== dashboardHref ? (
-            <Link
-              href="/"
-              className="inline-flex rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]"
-            >
-              Back to homepage
-            </Link>
-          ) : null}
           {dashboardHref && pathname !== dashboardHref ? (
             <Link
               href={dashboardHref}

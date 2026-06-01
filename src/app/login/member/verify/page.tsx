@@ -1,17 +1,10 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { MemberOtpForm } from "@/components/auth/member-otp-form";
 
 export default function MemberVerifyPage() {
   return (
     <div className="min-h-screen px-4 py-6 md:px-6">
-      <div className="mx-auto grid max-w-4xl gap-6">
-        <div>
-          <Link href="/" className="inline-flex rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]">
-            Back to homepage
-          </Link>
-        </div>
-        <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+      <div className="mx-auto grid max-w-4xl gap-6 lg:grid-cols-[1.05fr_0.95fr]">
         <section className="shell-panel relative overflow-hidden rounded-[34px] p-6 md:p-8">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.18),transparent_28%),radial-gradient(circle_at_80%_10%,rgba(220,38,38,0.16),transparent_24%),linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,244,238,0.88))]" />
           <div className="absolute -right-10 top-8 h-32 w-32 rounded-full bg-[#b9c8ea]/40 blur-3xl" />
@@ -46,7 +39,6 @@ export default function MemberVerifyPage() {
             </Suspense>
           </div>
         </section>
-        </div>
       </div>
     </div>
   );
