@@ -16,6 +16,7 @@ export function PortalShell({
   nav,
   headerAside,
   dashboardHref,
+  headerAction,
   children,
 }: {
   title: string;
@@ -23,6 +24,7 @@ export function PortalShell({
   nav: NavItem[];
   headerAside?: React.ReactNode;
   dashboardHref?: string;
+  headerAction?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -42,6 +44,7 @@ export function PortalShell({
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)] md:text-base">
                 {subtitle}
               </p>
+              {headerAction ? <div className="mt-3">{headerAction}</div> : null}
             </div>
 
             <div className="flex flex-col gap-3 lg:items-end">
