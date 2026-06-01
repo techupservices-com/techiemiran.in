@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export function UploadForm() {
   const [message, setMessage] = useState<string | null>(null);
@@ -10,6 +10,8 @@ export function UploadForm() {
   const [selfiePreviewUrl, setSelfiePreviewUrl] = useState<string | null>(null);
   const [documentPreviewUrl, setDocumentPreviewUrl] = useState<string | null>(null);
   const [documentIsImage, setDocumentIsImage] = useState(false);
+  const selfieInputRef = useRef<HTMLInputElement>(null);
+  const documentInputRef = useRef<HTMLInputElement>(null);
 
   function clearSelfie(input: HTMLInputElement | null) {
     if (selfiePreviewUrl) URL.revokeObjectURL(selfiePreviewUrl);
@@ -27,13 +29,21 @@ export function UploadForm() {
   }
 
   function resetPreviews() {
-    clearSelfie(document.getElementById("selfie") as HTMLInputElement | null);
-    clearDocument(document.getElementById("document") as HTMLInputElement | null);
+    clearSelfie(selfieInputRef.current);
+    clearDocument(documentInputRef.current);
   }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
+    const selfieFile = selfieInputRef.current?.files?.[0] ?? null;
+    const documentFile = documentInputRef.current?.files?.[0] ?? null;
+
+    if (!selfieFile || !documentFile) {
+      setMessage("Please choose both the selfie photo and the supporting document before uploading.");
+      return;
+    }
+
     const formData = new FormData(form);
     setMessage("Uploading...");
     const response = await fetch("/api/member/uploads", {
@@ -67,6 +77,7 @@ export function UploadForm() {
           id="selfie"
           type="file"
           name="selfie"
+          ref={selfieInputRef}
           accept="image/*"
           className="hidden"
           onChange={(event) => {
@@ -75,7 +86,6 @@ export function UploadForm() {
             if (selfiePreviewUrl) URL.revokeObjectURL(selfiePreviewUrl);
             setSelfiePreviewUrl(file ? URL.createObjectURL(file) : null);
           }}
-          required
         />
         <label htmlFor="selfie" className="inline-flex w-fit rounded-2xl bg-[#3c589e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2f467e]">
           Choose file
@@ -91,7 +101,7 @@ export function UploadForm() {
               </label>
               <button
                 type="button"
-                onClick={() => clearSelfie(document.getElementById("selfie") as HTMLInputElement | null)}
+                onClick={() => clearSelfie(selfieInputRef.current)}
                 className="inline-flex w-fit rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]"
               >
                 Remove file
@@ -112,6 +122,7 @@ export function UploadForm() {
           id="document"
           type="file"
           name="document"
+          ref={documentInputRef}
           accept="image/*,.pdf"
           className="hidden"
           onChange={(event) => {
@@ -127,7 +138,6 @@ export function UploadForm() {
               setDocumentPreviewUrl(null);
             }
           }}
-          required
         />
         <label htmlFor="document" className="inline-flex w-fit rounded-2xl bg-[#3c589e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2f467e]">
           Choose file
@@ -144,7 +154,7 @@ export function UploadForm() {
                 </label>
                 <button
                   type="button"
-                  onClick={() => clearDocument(document.getElementById("document") as HTMLInputElement | null)}
+                  onClick={() => clearDocument(documentInputRef.current)}
                   className="inline-flex w-fit rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]"
                 >
                   Remove file
@@ -163,7 +173,7 @@ export function UploadForm() {
                 </label>
                 <button
                   type="button"
-                  onClick={() => clearDocument(document.getElementById("document") as HTMLInputElement | null)}
+                  onClick={() => clearDocument(documentInputRef.current)}
                   className="inline-flex w-fit rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]"
                 >
                   Remove file
@@ -173,9 +183,13 @@ export function UploadForm() {
           )
         ) : null}
       </label>
-      <div className="md:col-span-2 flex items-center justify-between gap-4 pt-2">
-        <p className="text-sm text-[var(--muted)]">{message ?? "Accepted formats: images for selfie, images or PDF for supporting document."}</p>
-        <button className="rounded-2xl bg-[#3c589e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2f467e]">Upload files</button>
+      <div className="md:col-span-2 flex flex-col gap-3 pt-2 md:flex-row md:items-center md:justify-between">
+        <button className="rounded-2xl bg-[#3c589e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2f467e]">
+          Upload files
+        </button>
+        <p className="text-sm text-[var(--muted)] md:text-right">
+          {message ?? "Accepted formats: images for selfie, images or PDF for supporting document."}
+        </p>
       </div>
     </form>
   );
