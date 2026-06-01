@@ -3,8 +3,13 @@
 import Image from "next/image";
 import { useRef, useState } from "react";
 
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+const MAX_IMAGE_DIMENSION = 1600;
+const JPEG_QUALITY = 0.82;
+
 export function UploadForm() {
   const [message, setMessage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [selfieFileName, setSelfieFileName] = useState("No file chosen");
   const [documentFileName, setDocumentFileName] = useState("No file chosen");
   const [selfiePreviewUrl, setSelfiePreviewUrl] = useState<string | null>(null);
@@ -33,9 +38,50 @@ export function UploadForm() {
     clearDocument(documentInputRef.current);
   }
 
+  async function compressImage(file: File) {
+    const imageUrl = URL.createObjectURL(file);
+
+    try {
+      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new window.Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("Unable to process the selected image."));
+        img.src = imageUrl;
+      });
+
+      const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(image.width, image.height));
+      const width = Math.max(1, Math.round(image.width * scale));
+      const height = Math.max(1, Math.round(image.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d");
+
+      if (!context) {
+        throw new Error("Unable to prepare image upload.");
+      }
+
+      context.drawImage(image, 0, 0, width, height);
+
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY);
+      });
+
+      if (!blob) {
+        throw new Error("Unable to compress the selected image.");
+      }
+
+      return new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), {
+        type: "image/jpeg",
+        lastModified: Date.now(),
+      });
+    } finally {
+      URL.revokeObjectURL(imageUrl);
+    }
+  }
+
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = event.currentTarget;
     const selfieFile = selfieInputRef.current?.files?.[0] ?? null;
     const documentFile = documentInputRef.current?.files?.[0] ?? null;
 
@@ -44,19 +90,52 @@ export function UploadForm() {
       return;
     }
 
-    const formData = new FormData(form);
+    setIsUploading(true);
     setMessage("Uploading...");
-    const response = await fetch("/api/member/uploads", {
-      method: "POST",
-      body: formData,
-    });
-    const payload = await response.json();
-    setMessage(response.ok ? payload.message : payload.error);
-    if (response.ok) {
-      form.reset();
-      setSelfieFileName("No file chosen");
-      setDocumentFileName("No file chosen");
-      resetPreviews();
+
+    try {
+      const compressedSelfie = await compressImage(selfieFile);
+      const preparedDocument = documentFile.type.startsWith("image/")
+        ? await compressImage(documentFile)
+        : documentFile;
+
+      if (compressedSelfie.size + preparedDocument.size > MAX_UPLOAD_BYTES) {
+        setMessage("Selected files are too large. Please use smaller images or a lighter PDF document.");
+        setIsUploading(false);
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("selfie", compressedSelfie);
+      formData.append("document", preparedDocument);
+
+      const response = await fetch("/api/member/uploads", {
+        method: "POST",
+        body: formData,
+      });
+      const raw = await response.text();
+      let payload: { message?: string; error?: string } = {};
+
+      try {
+        payload = JSON.parse(raw);
+      } catch {
+        payload = {
+          error: response.status === 413
+            ? "Selected files are too large for upload. Please choose smaller files and try again."
+            : "Upload failed. Please try again.",
+        };
+      }
+
+      setMessage(response.ok ? payload.message ?? "Files uploaded successfully." : payload.error ?? "Upload failed.");
+      if (response.ok) {
+        setSelfieFileName("No file chosen");
+        setDocumentFileName("No file chosen");
+        resetPreviews();
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Upload failed. Please try again.");
+    } finally {
+      setIsUploading(false);
     }
   }
 
@@ -184,8 +263,8 @@ export function UploadForm() {
         ) : null}
       </label>
       <div className="md:col-span-2 flex flex-col gap-3 pt-2 md:flex-row md:items-center md:justify-between">
-        <button className="rounded-2xl bg-[#3c589e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2f467e]">
-          Upload files
+        <button disabled={isUploading} className="rounded-2xl bg-[#3c589e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2f467e] disabled:cursor-not-allowed disabled:opacity-60">
+          {isUploading ? "Uploading..." : "Upload files"}
         </button>
         <p
           className={`text-sm md:text-right ${
