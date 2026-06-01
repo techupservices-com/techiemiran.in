@@ -1,8 +1,13 @@
-import Image from "next/image";
+import { ExistingUploadedFiles } from "@/components/member/existing-uploaded-files";
 import { UploadForm } from "@/components/member/upload-form";
 import { StatusChip } from "@/components/shared/status-chip";
 import { getMemberSession } from "@/lib/auth";
-import { getMemberById, getMemberProfilePhotoUrl, listDocuments } from "@/lib/data";
+import {
+  getMemberById,
+  getMemberDocumentPreviewUrl,
+  getMemberProfilePhotoUrl,
+  listDocuments,
+} from "@/lib/data";
 import { formatDate } from "@/lib/utils";
 
 export default async function UploadsPage() {
@@ -12,6 +17,19 @@ export default async function UploadsPage() {
   const selfiePreviewUrl = member
     ? await getMemberProfilePhotoUrl(member.id, member.photoUrl)
     : null;
+  const documentItems = await Promise.all(
+    documents.map(async (document) => ({
+      id: document.id,
+      documentType: document.documentType,
+      fileName: document.fileName,
+      uploadedAt: formatDate(document.uploadedAt),
+      previewUrl:
+        document.documentType === "selfie"
+          ? selfiePreviewUrl
+          : await getMemberDocumentPreviewUrl(document),
+      mimeType: document.mimeType,
+    })),
+  );
 
   return (
     <section className="grid gap-4">
@@ -32,31 +50,7 @@ export default async function UploadsPage() {
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
             These files are already linked to your membership. Upload again only if you want to replace them.
           </p>
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            {documents.map((document) => (
-              <div key={document.id} className="rounded-[22px] border border-[var(--border)] bg-white p-4">
-                {document.documentType === "selfie" && selfiePreviewUrl ? (
-                  <div className="relative mb-4 aspect-[4/5] overflow-hidden rounded-[18px] bg-[#eef2fb]">
-                    <Image
-                      src={selfiePreviewUrl}
-                      alt="Uploaded selfie on record"
-                      fill
-                      unoptimized
-                      className="object-cover"
-                    />
-                  </div>
-                ) : null}
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-semibold capitalize">{document.documentType}</p>
-                  <StatusChip label="On record" tone="success" />
-                </div>
-                <p className="mt-2 text-sm text-[var(--foreground)]">{document.fileName}</p>
-                <p className="mt-1 text-xs text-[var(--muted)]">
-                  Uploaded {formatDate(document.uploadedAt)}
-                </p>
-              </div>
-            ))}
-          </div>
+          <ExistingUploadedFiles items={documentItems} />
         </div>
       ) : null}
 

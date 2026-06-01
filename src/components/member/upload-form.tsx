@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
@@ -8,6 +9,7 @@ const MAX_IMAGE_DIMENSION = 1600;
 const JPEG_QUALITY = 0.82;
 
 export function UploadForm() {
+  const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [selfieFileName, setSelfieFileName] = useState("No file chosen");
@@ -131,6 +133,7 @@ export function UploadForm() {
         setSelfieFileName("No file chosen");
         setDocumentFileName("No file chosen");
         resetPreviews();
+        router.refresh();
       }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Upload failed. Please try again.");

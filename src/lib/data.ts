@@ -149,6 +149,13 @@ async function resolveMemberPhotoUrl(
   return data.signedUrl;
 }
 
+async function createSignedStorageUrl(bucket: string, filePath: string) {
+  const client = getRequiredSupabaseClient();
+  const { data, error } = await client.storage.from(bucket).createSignedUrl(filePath, 60 * 60);
+  if (error || !data?.signedUrl) return null;
+  return data.signedUrl;
+}
+
 async function getProfilesAndDocuments() {
   const client = getRequiredSupabaseClient();
 
@@ -355,6 +362,47 @@ export async function getMemberProfilePhotoUrl(profileId: string, photoUrl?: str
       uploaded_at: document.uploadedAt,
     })),
   )) ?? null;
+}
+
+export async function getMemberDocumentPreviewUrl(document: MemberDocument) {
+  if (document.mimeType.startsWith("image/")) {
+    const bucket = document.documentType === "selfie" ? SELFIE_BUCKET : DOCUMENT_BUCKET;
+    return createSignedStorageUrl(bucket, document.filePath);
+  }
+
+  return null;
+}
+
+export async function removeMemberDocument(profileId: string, documentType: "selfie" | "document") {
+  const client = getRequiredSupabaseClient();
+  const { data, error } = await client
+    .from("member_documents")
+    .select("id,file_path")
+    .eq("profile_id", profileId)
+    .eq("document_type", documentType)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  const bucket = documentType === "selfie" ? SELFIE_BUCKET : DOCUMENT_BUCKET;
+  const [{ error: storageError }, { error: deleteError }] = await Promise.all([
+    client.storage.from(bucket).remove([data.file_path]),
+    client.from("member_documents").delete().eq("id", data.id),
+  ]);
+
+  if (storageError) throw storageError;
+  if (deleteError) throw deleteError;
+
+  if (documentType === "selfie") {
+    const { error: profileError } = await client
+      .from("profiles")
+      .update({ photo_url: null, updated_at: new Date().toISOString() })
+      .eq("id", profileId);
+    if (profileError) throw profileError;
+  }
+
+  return true;
 }
 
 export async function createMobileChangeRequest(input: Omit<MobileChangeRequest, "id" | "createdAt">) {
