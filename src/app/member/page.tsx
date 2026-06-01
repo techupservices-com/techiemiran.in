@@ -73,11 +73,8 @@ export default async function MemberDashboardPage() {
                 </h2>
                 <p className="mt-2 text-sm text-[var(--muted)]">{member.membershipId} · {member.memberType}</p>
               </div>
-              <div className="flex flex-col items-start gap-3 md:items-end">
+              <div className="flex items-start md:items-end">
                 <StatusChip label={member.verification.completed ? "Membership verified" : "Action needed"} tone={member.verification.completed ? "success" : "warning"} />
-                <p className="max-w-xs text-sm leading-6 text-[var(--muted)] md:text-right">
-                  Review the details below and complete any pending steps to finish your verification.
-                </p>
               </div>
             </div>
 
