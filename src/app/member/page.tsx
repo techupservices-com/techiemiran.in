@@ -73,9 +73,6 @@ export default async function MemberDashboardPage() {
                 </h2>
                 <p className="mt-2 text-sm text-[var(--muted)]">{member.membershipId} · {member.memberType}</p>
               </div>
-              <div className="flex items-start md:items-end">
-                <StatusChip label={member.verification.completed ? "Membership verified" : "Action needed"} tone={member.verification.completed ? "success" : "warning"} />
-              </div>
             </div>
 
             <div className="grid gap-5 lg:grid-cols-[200px_1fr] lg:items-start">

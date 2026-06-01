@@ -66,6 +66,15 @@ export function PortalShell({
           </div>
         </header>
 
+        <div>
+          <Link
+            href="/"
+            className="inline-flex rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]"
+          >
+            Back to homepage
+          </Link>
+        </div>
+
         <main className="grid gap-6">{children}</main>
       </div>
     </div>
