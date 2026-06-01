@@ -75,10 +75,10 @@ export default async function MemberDashboardPage() {
               </div>
             </div>
 
-            <div className="grid gap-5 lg:grid-cols-[200px_1fr] lg:items-start">
+            <div className="grid gap-4 sm:grid-cols-[128px_1fr] sm:items-start lg:grid-cols-[170px_1fr]">
               <Link
                 href="/member/uploads"
-                className="group relative flex aspect-[4/5] w-full items-center justify-center overflow-hidden rounded-[28px] border border-[var(--border)] bg-[#eef2fb] shadow-sm"
+                className="group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-[28px] border border-[var(--border)] bg-[#eef2fb] shadow-sm sm:aspect-[4/5] lg:max-h-[236px]"
               >
                 {profilePhotoUrl ? (
                   <Image
@@ -89,14 +89,14 @@ export default async function MemberDashboardPage() {
                     className="object-cover"
                   />
                 ) : (
-                  <div className="flex h-full w-full flex-col items-center justify-center gap-4 text-[#3c589e]">
-                    <span className="flex h-18 w-18 items-center justify-center rounded-full bg-white shadow-sm">
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-3 px-4 text-center text-[#3c589e]">
+                    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm sm:h-16 sm:w-16">
                       <Camera className="h-8 w-8" />
                     </span>
                     <span className="text-sm font-semibold tracking-[0.01em]">Set profile photo</span>
                   </div>
                 )}
-                <span className="absolute inset-x-3 bottom-3 rounded-full bg-white/92 px-3 py-2 text-center text-xs font-semibold text-[#24345f] shadow-sm transition group-hover:bg-white">
+                <span className="absolute inset-x-2 bottom-2 rounded-full bg-white/92 px-3 py-2 text-center text-[11px] font-semibold text-[#24345f] shadow-sm transition group-hover:bg-white sm:inset-x-3 sm:bottom-3 sm:text-xs">
                   {profilePhotoUrl ? "Change photo" : "Upload selfie"}
                 </span>
               </Link>
