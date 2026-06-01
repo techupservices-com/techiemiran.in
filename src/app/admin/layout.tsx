@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { AdminLogoutButton } from "@/components/shared/admin-logout-button";
 import { PortalShell } from "@/components/shared/portal-shell";
 import { getAdminSession } from "@/lib/auth";
 
@@ -18,6 +19,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       title="Admin dashboard"
       subtitle="Search, review, and edit member records in a responsive grid or list without manual verification overrides."
       nav={nav}
+      headerRightAction={<AdminLogoutButton />}
     >
       {children}
     </PortalShell>

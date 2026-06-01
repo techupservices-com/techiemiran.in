@@ -17,6 +17,7 @@ export function PortalShell({
   headerAside,
   dashboardHref,
   headerAction,
+  headerRightAction,
   children,
 }: {
   title: string;
@@ -25,6 +26,7 @@ export function PortalShell({
   headerAside?: React.ReactNode;
   dashboardHref?: string;
   headerAction?: React.ReactNode;
+  headerRightAction?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -67,6 +69,7 @@ export function PortalShell({
                   ))}
                 </nav>
               ) : null}
+              {headerRightAction ? <div className="lg:self-end">{headerRightAction}</div> : null}
             </div>
           </div>
         </header>
