@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 const MAX_IMAGE_DIMENSION = 1600;
 const JPEG_QUALITY = 0.82;
+const UPLOAD_SCROLL_FLAG = "pc-scroll-existing-uploads";
 
 export function UploadForm() {
   const router = useRouter();
@@ -130,6 +131,7 @@ export function UploadForm() {
 
       setMessage(response.ok ? payload.message ?? "Files uploaded successfully." : payload.error ?? "Upload failed.");
       if (response.ok) {
+        window.sessionStorage.setItem(UPLOAD_SCROLL_FLAG, "1");
         setSelfieFileName("No file chosen");
         setDocumentFileName("No file chosen");
         resetPreviews();

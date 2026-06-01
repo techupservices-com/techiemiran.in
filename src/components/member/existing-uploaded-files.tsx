@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+const UPLOAD_SCROLL_FLAG = "pc-scroll-existing-uploads";
 
 interface UploadedFileItem {
   id: string;
@@ -16,6 +18,16 @@ interface UploadedFileItem {
 export function ExistingUploadedFiles({ items }: { items: UploadedFileItem[] }) {
   const router = useRouter();
   const [busyType, setBusyType] = useState<"selfie" | "document" | null>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (window.sessionStorage.getItem(UPLOAD_SCROLL_FLAG) !== "1") return;
+
+    window.sessionStorage.removeItem(UPLOAD_SCROLL_FLAG);
+    window.requestAnimationFrame(() => {
+      sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, []);
 
   async function removeFile(documentType: "selfie" | "document") {
     setBusyType(documentType);
@@ -29,7 +41,7 @@ export function ExistingUploadedFiles({ items }: { items: UploadedFileItem[] }) 
   }
 
   return (
-    <div className="mt-5 grid gap-4 md:grid-cols-2">
+    <div ref={sectionRef} className="mt-5 grid gap-4 md:grid-cols-2">
       {items.map((item) => (
         <div key={item.id} className="rounded-[22px] border border-[var(--border)] bg-white p-4">
           {item.previewUrl ? (
