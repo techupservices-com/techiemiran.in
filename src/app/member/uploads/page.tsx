@@ -17,8 +17,13 @@ export default async function UploadsPage() {
   const selfiePreviewUrl = member
     ? await getMemberProfilePhotoUrl(member.id, member.photoUrl)
     : null;
+  const sortedDocuments = [...documents].sort((left, right) => {
+    if (left.documentType === right.documentType) return 0;
+    return left.documentType === "selfie" ? -1 : 1;
+  });
+
   const documentItems = await Promise.all(
-    documents.map(async (document) => ({
+    sortedDocuments.map(async (document) => ({
       id: document.id,
       documentType: document.documentType,
       fileName: document.fileName,
