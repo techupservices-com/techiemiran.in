@@ -31,7 +31,7 @@ export default function MemberVerifyPage() {
 
         <section className="soft-card rounded-[34px] border-white/70 bg-white/88 p-6 md:p-8">
           <p className="font-mono text-xs uppercase tracking-[0.3em] text-[#3c589e]">Verify OTP</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em]">Enter your 6-digit code</h2>
+          <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em]">Enter your 4-digit code</h2>
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">If you are using demo mode, the preview code from the previous screen can be used here directly.</p>
           <div className="mt-6">
             <Suspense fallback={<p className="text-sm text-[var(--muted)]">Loading verification form...</p>}>

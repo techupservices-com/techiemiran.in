@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   const session = await getMemberSession();
   if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const schema = z.object({ requestId: z.string().min(1), otp: z.string().length(6) });
+  const schema = z.object({ requestId: z.string().min(1), otp: z.string().length(4) });
   const body = schema.parse(await request.json());
   const requestRecord = await getMobileChangeRequest(body.requestId);
 

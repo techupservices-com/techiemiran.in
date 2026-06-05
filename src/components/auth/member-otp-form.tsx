@@ -105,10 +105,10 @@ export function MemberOtpForm() {
         <input
           id="otp"
           inputMode="numeric"
-          maxLength={6}
+          maxLength={4}
           value={otp}
           onChange={(event) => setOtp(event.target.value)}
-          placeholder="6 digit code"
+          placeholder="4 digit code"
           className="w-full rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-base tracking-[0.35em] text-[var(--foreground)] shadow-sm focus:border-[#6f84ba] md:px-5 md:py-4 md:text-lg"
           required
         />

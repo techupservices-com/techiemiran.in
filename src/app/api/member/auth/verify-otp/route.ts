@@ -5,7 +5,7 @@ import { addAuditLog, updateMember } from "@/lib/data";
 import { verifyOtp } from "@/lib/otp-store";
 
 export async function POST(request: Request) {
-  const schema = z.object({ profileId: z.string().min(1), otp: z.string().length(6) });
+  const schema = z.object({ profileId: z.string().min(1), otp: z.string().length(4) });
   const body = schema.parse(await request.json());
   const result = await verifyOtp(body.profileId, "login", body.otp);
 

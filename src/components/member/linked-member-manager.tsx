@@ -161,7 +161,7 @@ export function LinkedMemberManager({ members }: { members: MemberWithVerificati
                 Verify OTP sent to {formatMobile(pendingRequests[member.id].mobile)}
               </p>
               <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-                Ask the linked member for the 6-digit WhatsApp OTP and enter it below to activate the new number.
+                Ask the linked member for the 4-digit WhatsApp OTP and enter it below to activate the new number.
               </p>
               {pendingRequests[member.id].previewCode ? (
                 <p className="mt-2 text-sm text-[var(--muted)]">
@@ -180,7 +180,7 @@ export function LinkedMemberManager({ members }: { members: MemberWithVerificati
                       },
                     }))
                   }
-                  placeholder="Enter 6-digit OTP"
+                  placeholder="Enter 4-digit OTP"
                   className="min-w-0 flex-1 rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-[var(--foreground)]"
                 />
                 <button

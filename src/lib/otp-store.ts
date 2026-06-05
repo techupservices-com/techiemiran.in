@@ -46,7 +46,7 @@ export async function createOtp(
   referenceId?: string,
 ) {
   const client = getRequiredSupabaseClient();
-  const code = `${Math.floor(100000 + Math.random() * 900000)}`;
+  const code = `${Math.floor(1000 + Math.random() * 9000)}`;
   const createdAt = new Date();
   const expiresAt = new Date(createdAt.getTime() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
