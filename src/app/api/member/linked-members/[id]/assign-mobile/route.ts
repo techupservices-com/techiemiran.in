@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getMemberSession } from "@/lib/auth";
 import { createMobileChangeRequest, getMemberById } from "@/lib/data";
 import { createOtp } from "@/lib/otp-store";
+import { sendSmsOtp } from "@/lib/sms";
 import { sendOtpMessage } from "@/lib/techup";
 import { normalizeMobile } from "@/lib/utils";
 
@@ -13,7 +14,7 @@ export async function POST(request: Request, context: RouteContext<"/api/member/
   const member = await getMemberById(id);
   if (!member) return Response.json({ error: "Linked member not found." }, { status: 404 });
 
-  const schema = z.object({ newMobile: z.string().min(10) });
+  const schema = z.object({ newMobile: z.string().min(10), deliveryChannel: z.enum(["sms", "whatsapp"]).default("whatsapp") });
   const body = schema.parse(await request.json());
   const normalized = normalizeMobile(body.newMobile);
   const requestRecord = await createMobileChangeRequest({
@@ -29,16 +30,19 @@ export async function POST(request: Request, context: RouteContext<"/api/member/
     normalized,
     "linked_member_mobile_change",
     "mobile",
-    "whatsapp",
+    body.deliveryChannel,
     requestRecord.id,
   );
-  const delivery = await sendOtpMessage({
-    mobile: normalized,
-    otp: code,
-    memberName: member.fullName,
-    purpose: "linked_member_mobile_change",
-    clientReference: requestRecord.id,
-  });
+  const delivery =
+    body.deliveryChannel === "sms"
+      ? await sendSmsOtp({ mobile: normalized, otp: code })
+      : await sendOtpMessage({
+          mobile: normalized,
+          otp: code,
+          memberName: member.fullName,
+          purpose: "linked_member_mobile_change",
+          clientReference: requestRecord.id,
+        });
 
   return Response.json({
     message: `Verification message sent for ${member.fullName}.`,
