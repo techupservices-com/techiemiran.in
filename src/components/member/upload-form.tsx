@@ -242,9 +242,11 @@ export function UploadForm({ items }: { items: ExistingUploadItem[] }) {
         </div>
       </div>
 
-      <p className={`text-sm md:col-span-2 ${message && !message.toLowerCase().includes("success") && !message.toLowerCase().includes("uploaded") ? "font-semibold text-red-600" : "text-[var(--muted)]"}`}>
-        {message ?? "Each file uploads immediately after you choose it. You can replace uploaded files at any time."}
-      </p>
+      {message ? (
+        <p className={`text-sm md:col-span-2 ${!message.toLowerCase().includes("success") && !message.toLowerCase().includes("uploaded") ? "font-semibold text-red-600" : "text-[var(--muted)]"}`}>
+          {message}
+        </p>
+      ) : null}
     </div>
   );
 }
