@@ -1,8 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function MobileChangeForm() {
+  const router = useRouter();
   const [newMobile, setNewMobile] = useState("");
   const [requestId, setRequestId] = useState<string | null>(null);
   const [otp, setOtp] = useState("");
@@ -36,6 +38,9 @@ export function MobileChangeForm() {
     });
     const payload = await response.json();
     setMessage(response.ok ? payload.message : payload.error);
+    if (response.ok) {
+      router.refresh();
+    }
   }
 
   return (

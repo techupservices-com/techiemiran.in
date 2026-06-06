@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { getMemberSession } from "@/lib/auth";
-import { getLinkedMembers, getMemberById, getMemberProfilePhotoUrl, isMobileLoginOwner, listDocuments } from "@/lib/data";
+import { getLinkedMembers, getMemberById, getMemberDocumentPreviewUrl, getMemberProfilePhotoUrl, isMobileLoginOwner, listDocuments } from "@/lib/data";
 import { MemberSelfieUploader } from "@/components/member/member-selfie-uploader";
+import { MemberVerificationWizard } from "@/components/member/member-verification-wizard";
 import { formatMobile } from "@/lib/utils";
-import { StatusChip } from "@/components/shared/status-chip";
 
 export default async function MemberDashboardPage() {
   const session = await getMemberSession();
@@ -18,47 +17,30 @@ export default async function MemberDashboardPage() {
     linkedMembers.length > 1 && linkedMembers.some((entry) => !entry.mobileVerified);
   const mobileOwner = await isMobileLoginOwner(member.id, member.currentMobile);
 
-  const steps = [
-    {
-      key: "mobile",
-      href: "/member/mobile",
-      title: "Mobile number verified",
-      description: "Your WhatsApp login OTP confirms the registered mobile number for this account.",
-      done: member.verification.mobileVerified,
-      cta: member.verification.mobileVerified ? "Review mobile" : "Verify mobile",
-    },
-    {
-      key: "email",
-      href: "/member/email",
-      title: "Email address verified",
-      description: "Verify your email address with an OTP so your voting record and future notifications stay secure.",
-      done: member.verification.emailVerified,
-      cta: member.verification.emailVerified ? "Review email" : "Verify email",
-    },
-    {
-      key: "uploads",
-      href: "/member/uploads",
-      title: "Upload selfie and supporting document",
-      description: "Upload your latest selfie and one identity/supporting document to finish document verification.",
-      done: member.verification.selfieUploaded && member.verification.documentUploaded,
-      cta:
-        member.verification.selfieUploaded && member.verification.documentUploaded
-          ? "Review uploads"
-          : "Upload files",
-    },
-    ...(requiresLinkedMemberCleanup
-      ? [
-          {
-            key: "linked-members",
-            href: "/member/linked-members",
-            title: "Separate shared family mobile numbers",
-            description: "Some family members still share this mobile number. Give them their own numbers to finish cleanup.",
-            done: false,
-            cta: "Resolve shared numbers",
-          },
-        ]
-      : []),
-  ];
+  const orderedDocuments = [...documents].sort((left, right) => {
+    const order = [
+      "selfie:selfie",
+      "aadhar:front",
+      "aadhar:back",
+      "passport:first_page",
+      "passport:last_page",
+      "legacy:legacy",
+    ];
+    return order.indexOf(`${left.documentGroup}:${left.documentPart}`) - order.indexOf(`${right.documentGroup}:${right.documentPart}`);
+  });
+
+  const uploadItems = await Promise.all(
+    orderedDocuments.map(async (document) => ({
+      id: document.id,
+      documentGroup: document.documentGroup,
+      documentPart: document.documentPart,
+      fileName: document.fileName,
+      previewUrl:
+        document.documentType === "selfie"
+          ? profilePhotoUrl
+          : await getMemberDocumentPreviewUrl(document),
+    })),
+  );
 
   return (
     <>
@@ -113,33 +95,13 @@ export default async function MemberDashboardPage() {
         </div>
       </section>
 
-      <section className="grid gap-4">
-        {steps.map((step, index) => (
-          <Link
-            key={step.key}
-            href={step.href}
-            className="soft-card rounded-[28px] p-6 hover:border-[#6f84ba] hover:bg-[#eef2fb]/40"
-          >
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex gap-4">
-                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold ${step.done ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
-                  {step.done ? "Done" : `${index + 1}`}
-                </div>
-                <div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h3 className="text-xl font-semibold">{step.title}</h3>
-                    <StatusChip label={step.done ? "Completed" : "Pending"} tone={step.done ? "success" : "warning"} />
-                  </div>
-                  <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">{step.description}</p>
-                </div>
-              </div>
-              <span className="rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)]">
-                {step.cta}
-              </span>
-            </div>
-          </Link>
-        ))}
-      </section>
+      <MemberVerificationWizard
+        key={`${member.id}-${member.verification.mobileVerified}-${member.verification.emailVerified}-${member.verification.selfieUploaded}-${member.verification.documentUploaded}-${requiresLinkedMemberCleanup}-${linkedMembers.filter((entry) => !entry.mobileVerified).length}`}
+        member={member}
+        linkedMembers={linkedMembers}
+        uploadItems={uploadItems}
+        requiresLinkedMemberCleanup={requiresLinkedMemberCleanup}
+      />
 
     </>
   );
