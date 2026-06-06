@@ -174,15 +174,11 @@ export function UploadForm({ items }: { items: ExistingUploadItem[] }) {
     return (
       <div className="flex flex-col gap-2 text-sm text-[var(--muted)]">
         <span>{getLabel(key)}</span>
-        <div className={`relative flex max-w-[260px] ${getAspectClass(key)} items-center justify-center overflow-hidden rounded-[22px] border border-[var(--border)] bg-[#eef2fb]`}>
-          {preview ? (
+        {preview ? (
+          <div className={`relative flex max-w-[260px] ${getAspectClass(key)} items-center justify-center overflow-hidden rounded-[22px] border border-[var(--border)] bg-[#eef2fb]`}>
             <img src={preview} alt={`${key} preview`} className="h-auto max-h-full w-full rounded-[22px] object-cover" />
-          ) : (
-            <span className="px-4 text-center text-sm font-semibold text-[#3c589e]">
-              {key === "selfie" ? "Tap to choose your selfie" : "No file uploaded yet"}
-            </span>
-          )}
-        </div>
+          </div>
+        ) : null}
         <input type="text" value={getFileName(key)} readOnly className="rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-[var(--foreground)]" />
         <input
           id={key}
@@ -212,8 +208,8 @@ export function UploadForm({ items }: { items: ExistingUploadItem[] }) {
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <div className="md:col-span-2 rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-900">
-        Upload one clear selfie and a supported identity document set. Existing legacy document uploads will not count until re-uploaded in the new format.
+      <div className="md:col-span-2 rounded-[22px] border border-[#c8d3ea] bg-[#eef2fb] px-4 py-4 text-sm font-medium leading-6 text-[#24345f] shadow-sm">
+        Each file uploads immediately after you choose it. You can replace uploaded files at any time.
       </div>
 
       {renderSlot("selfie")}
