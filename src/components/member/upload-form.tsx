@@ -195,13 +195,6 @@ export function UploadForm() {
           <label htmlFor={key} className="inline-flex w-fit rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]">
             Replace file
           </label>
-          <button
-            type="button"
-            onClick={() => clearSlot(key)}
-            className="inline-flex w-fit rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]"
-          >
-            Remove file
-          </button>
         </div>
       </div>
     );
@@ -271,9 +264,6 @@ export function UploadForm() {
             <label htmlFor="selfie" className="inline-flex w-fit rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]">
               Replace
             </label>
-            <button type="button" onClick={() => clearSlot("selfie")} className="inline-flex w-fit rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]">
-              Remove
-            </button>
           </div>
         ) : null}
       </div>

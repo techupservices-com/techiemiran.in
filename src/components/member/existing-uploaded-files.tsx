@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const UPLOAD_SCROLL_FLAG = "pc-scroll-existing-uploads";
@@ -18,8 +17,6 @@ interface UploadedFileItem {
 }
 
 export function ExistingUploadedFiles({ items }: { items: UploadedFileItem[] }) {
-  const router = useRouter();
-  const [busyType, setBusyType] = useState<"selfie" | "document" | null>(null);
   const [brokenPreviews, setBrokenPreviews] = useState<Record<string, boolean>>({});
   const sectionRef = useRef<HTMLDivElement>(null);
 
@@ -31,13 +28,6 @@ export function ExistingUploadedFiles({ items }: { items: UploadedFileItem[] }) 
       sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }, []);
-
-  async function removeFile(item: UploadedFileItem) {
-    setBusyType(item.documentType);
-    const response = await fetch(`/api/member/uploads/${item.documentType}?documentId=${item.id}`, { method: "DELETE" });
-    setBusyType(null);
-    if (response.ok) router.refresh();
-  }
 
   function replaceFile(item: UploadedFileItem) {
     const key =
@@ -105,14 +95,6 @@ export function ExistingUploadedFiles({ items }: { items: UploadedFileItem[] }) 
               className="inline-flex rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]"
             >
               Replace file
-            </button>
-            <button
-              type="button"
-              disabled={busyType === item.documentType}
-              onClick={() => removeFile(item)}
-              className="inline-flex rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb] disabled:opacity-60"
-            >
-              {busyType === item.documentType ? "Removing..." : "Remove file"}
             </button>
           </div>
         </div>

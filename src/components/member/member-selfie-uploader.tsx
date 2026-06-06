@@ -13,7 +13,6 @@ export function MemberSelfieUploader({ photoUrl, hasSelfie }: { photoUrl: string
   const inputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [isRemoving, setIsRemoving] = useState(false);
 
   async function compressImage(file: File) {
     const imageUrl = URL.createObjectURL(file);
@@ -54,16 +53,6 @@ export function MemberSelfieUploader({ photoUrl, hasSelfie }: { photoUrl: string
       if (inputRef.current) inputRef.current.value = "";
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
-    }
-  }
-
-  async function removeSelfie() {
-    setIsRemoving(true);
-    try {
-      const response = await fetch("/api/member/uploads/selfie", { method: "DELETE" });
-      if (response.ok) router.refresh();
-    } finally {
-      setIsRemoving(false);
     }
   }
 
@@ -117,16 +106,6 @@ export function MemberSelfieUploader({ photoUrl, hasSelfie }: { photoUrl: string
         >
           {isUploading ? "Uploading..." : hasSelfie || photoUrl ? "Replace" : "Upload selfie"}
         </button>
-        {hasSelfie || photoUrl ? (
-          <button
-            type="button"
-            onClick={() => void removeSelfie()}
-            disabled={isRemoving}
-            className="rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-sm font-semibold text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb] disabled:opacity-60"
-          >
-            {isRemoving ? "Removing..." : "Remove"}
-          </button>
-        ) : null}
       </div>
     </div>
   );
