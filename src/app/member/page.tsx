@@ -13,30 +13,10 @@ export default async function MemberDashboardPage() {
 
   const linkedMembers = await getLinkedMembers(member.id);
   const documents = await listDocuments(member.id);
-  const orderedDocuments = [...documents].sort((left, right) => {
-    const order = [
-      "selfie:selfie",
-      "aadhar:front",
-      "aadhar:back",
-      "passport:first_page",
-      "passport:last_page",
-      "legacy:legacy",
-    ];
-    return order.indexOf(`${left.documentGroup}:${left.documentPart}`) - order.indexOf(`${right.documentGroup}:${right.documentPart}`);
-  });
   const profilePhotoUrl = await getMemberProfilePhotoUrl(member.id, member.photoUrl);
   const requiresLinkedMemberCleanup =
     linkedMembers.length > 1 && linkedMembers.some((entry) => !entry.mobileVerified);
   const mobileOwner = await isMobileLoginOwner(member.id, member.currentMobile);
-
-  function getDocumentLabel(document: (typeof orderedDocuments)[number]) {
-    if (document.documentGroup === "selfie") return "Selfie";
-    if (document.documentGroup === "aadhar" && document.documentPart === "front") return "Aadhar Front";
-    if (document.documentGroup === "aadhar" && document.documentPart === "back") return "Aadhar Back";
-    if (document.documentGroup === "passport" && document.documentPart === "first_page") return "Passport First Page";
-    if (document.documentGroup === "passport" && document.documentPart === "last_page") return "Passport Last Page";
-    return "Legacy document";
-  }
 
   const steps = [
     {
@@ -161,41 +141,6 @@ export default async function MemberDashboardPage() {
         ))}
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
-        <div className="soft-card rounded-[28px] p-6">
-          <h3 className="text-xl font-semibold">Household number check</h3>
-          <div className="mt-4 space-y-3">
-            {linkedMembers.map((entry) => (
-              <div key={entry.id} className="rounded-[22px] border border-[var(--border)] bg-white px-4 py-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="font-medium">{entry.fullName}</p>
-                    <p className="text-sm text-[var(--muted)]">{entry.membershipId} · {formatMobile(entry.currentMobile)}</p>
-                  </div>
-                  <StatusChip label={entry.mobileVerified ? "Unique number verified" : "Still needs action"} tone={entry.mobileVerified ? "success" : "warning"} />
-                </div>
-              </div>
-            ))}
-            {linkedMembers.length <= 1 ? (
-              <p className="text-sm text-[var(--muted)]">No other members currently share this mobile number.</p>
-            ) : null}
-          </div>
-        </div>
-
-        {orderedDocuments.length ? (
-          <div className="soft-card rounded-[28px] p-6">
-            <h3 className="text-xl font-semibold">Uploaded documents</h3>
-            <div className="mt-4 grid gap-3">
-              {orderedDocuments.map((document) => (
-                <div key={document.id} className="rounded-[22px] border border-[var(--border)] bg-white px-4 py-4">
-                  <p className="font-medium">{getDocumentLabel(document)}</p>
-                  <p className="text-sm text-[var(--muted)]">{document.fileName}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
-      </section>
     </>
   );
 }
