@@ -171,12 +171,13 @@ export function UploadForm({ items }: { items: ExistingUploadItem[] }) {
     const preview = getPreviewUrl(key);
     const hasExisting = Boolean(existingMap[key]);
     const isUploading = uploadingSlot === key;
+    const triggerClassName = "inline-flex w-fit rounded-2xl bg-[#3c589e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2f467e] disabled:opacity-60";
 
     return (
       <div className="flex flex-col gap-3 text-sm text-[var(--muted)]">
         <span>{getLabel(key)}</span>
         {preview ? (
-          <div className={`relative flex max-w-[260px] ${getAspectClass(key)} items-center justify-center overflow-hidden rounded-[22px] border border-[var(--border)] bg-[#eef2fb]`}>
+          <label htmlFor={key} className={`relative flex max-w-[260px] ${getAspectClass(key)} ${isUploading ? "pointer-events-none" : "cursor-pointer"} items-center justify-center overflow-hidden rounded-[22px] border border-[var(--border)] bg-[#eef2fb]`}>
             <Image
               src={preview}
               alt={`${key} preview`}
@@ -185,7 +186,7 @@ export function UploadForm({ items }: { items: ExistingUploadItem[] }) {
               unoptimized
               className="h-auto max-h-full w-full rounded-[22px] object-cover"
             />
-          </div>
+          </label>
         ) : null}
         <input type="text" value={getFileName(key)} readOnly className="rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-[var(--foreground)]" />
         <input
@@ -207,14 +208,20 @@ export function UploadForm({ items }: { items: ExistingUploadItem[] }) {
             await uploadSlot(key, file);
           }}
         />
-        <button
-          type="button"
-          onClick={() => refs[key].current?.click()}
-          disabled={isUploading}
-          className="inline-flex w-fit rounded-2xl bg-[#3c589e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2f467e] disabled:opacity-60"
-        >
-          {isUploading ? "Uploading..." : hasExisting ? "Replace file" : key === "selfie" ? "Upload selfie" : "Choose file"}
-        </button>
+        {key === "selfie" ? (
+          <label htmlFor={key} className={`${triggerClassName} ${isUploading ? "pointer-events-none" : "cursor-pointer"}`}>
+            {isUploading ? "Uploading..." : hasExisting ? "Replace file" : "Upload selfie"}
+          </label>
+        ) : (
+          <button
+            type="button"
+            onClick={() => refs[key].current?.click()}
+            disabled={isUploading}
+            className={triggerClassName}
+          >
+            {isUploading ? "Uploading..." : hasExisting ? "Replace file" : "Choose file"}
+          </button>
+        )}
       </div>
     );
   }
