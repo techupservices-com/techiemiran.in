@@ -1,4 +1,3 @@
-import { ExistingUploadedFiles } from "@/components/member/existing-uploaded-files";
 import { UploadForm } from "@/components/member/upload-form";
 import { StatusChip } from "@/components/shared/status-chip";
 import { getMemberSession } from "@/lib/auth";
@@ -58,18 +57,8 @@ export default async function UploadsPage() {
         </div>
       </div>
 
-      {documents.length ? (
-        <div className="soft-card rounded-[28px] p-6">
-          <h3 className="text-xl font-semibold">Files already on record</h3>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            These files are already linked to your membership. Upload again only if you want to replace them.
-          </p>
-          <ExistingUploadedFiles items={documentItems} />
-        </div>
-      ) : null}
-
       <div className="soft-card rounded-[28px] p-6">
-        <UploadForm />
+        <UploadForm items={documentItems} />
       </div>
     </section>
   );
