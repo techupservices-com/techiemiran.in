@@ -5,6 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { OTP_RESEND_SECONDS } from "@/lib/constants";
 import { formatMobile } from "@/lib/utils";
 
+function getDestinationLabel(identifierType: string, mobile: string, email: string, identifier: string) {
+  if (identifierType === "email") return email || identifier;
+  return formatMobile(mobile || identifier);
+}
+
 export function MemberOtpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -16,7 +21,10 @@ export function MemberOtpForm() {
   const [previewCode, setPreviewCode] = useState(searchParams.get("previewCode") ?? "");
   const [profileId, setProfileId] = useState(searchParams.get("profileId") ?? "");
   const [mobile, setMobile] = useState(searchParams.get("mobile") ?? "");
+  const [email, setEmail] = useState(searchParams.get("email") ?? "");
   const identifier = searchParams.get("identifier") ?? "";
+  const identifierType = searchParams.get("identifierType") ?? "mobile";
+  const deliveryChannel = searchParams.get("deliveryChannel") ?? "whatsapp";
 
   useEffect(() => {
     if (secondsLeft <= 0) return;
@@ -35,7 +43,7 @@ export function MemberOtpForm() {
     const response = await fetch("/api/member/auth/request-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ identifier }),
+      body: JSON.stringify({ identifier, identifierType, deliveryChannel }),
     });
     const payload = await response.json();
     setIsResending(false);
@@ -47,6 +55,7 @@ export function MemberOtpForm() {
 
     setProfileId(payload.profileId);
     setMobile(payload.mobile);
+    setEmail(payload.email ?? "");
     setPreviewCode(payload.previewCode ?? "");
     setOtp(payload.previewCode ?? "");
     setSecondsLeft(OTP_RESEND_SECONDS);
@@ -60,7 +69,7 @@ export function MemberOtpForm() {
     const response = await fetch("/api/member/auth/verify-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profileId, identifier, otp }),
+      body: JSON.stringify({ profileId, identifier, identifierType, deliveryChannel, otp }),
     });
     const payload = await response.json();
     setIsLoading(false);
@@ -79,8 +88,12 @@ export function MemberOtpForm() {
       <div className="rounded-[22px] border border-[var(--border)] bg-[#eef2fb]/70 px-4 py-4 text-sm leading-6 text-[#24345f]">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <span className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">Sending OTP to</span>
-            <p className="mt-2 text-lg font-semibold">{formatMobile(mobile || identifier)}</p>
+            <span className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">
+              Sending {deliveryChannel.toUpperCase()} OTP to
+            </span>
+            <p className="mt-2 text-lg font-semibold">
+              {getDestinationLabel(identifierType, mobile, email, identifier)}
+            </p>
           </div>
           <button
             type="button"

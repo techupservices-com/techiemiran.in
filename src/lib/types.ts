@@ -3,7 +3,11 @@ export type Role = "member" | "admin";
 export type VerificationPurpose =
   | "login"
   | "mobile_change"
-  | "linked_member_mobile_change";
+  | "linked_member_mobile_change"
+  | "email_verify";
+
+export type IdentifierType = "mobile" | "email";
+export type OtpDeliveryChannel = "sms" | "whatsapp" | "email";
 
 export type VerificationState = "pending" | "verified" | "attention";
 
@@ -15,6 +19,7 @@ export interface MemberProfile {
   memberType: string;
   status: string;
   email: string;
+  emailVerified: boolean;
   currentMobile: string;
   mobileVerified: boolean;
   dateOfBirth: string;
@@ -55,6 +60,8 @@ export interface OtpRecord {
   profileId: string;
   mobile: string;
   purpose: VerificationPurpose;
+  identifierType?: IdentifierType;
+  deliveryChannel?: OtpDeliveryChannel;
   otpHash: string;
   expiresAt: string;
   createdAt: string;
@@ -77,6 +84,7 @@ export interface AuditLog {
 export interface VerificationChecklist {
   profileConfirmed: boolean;
   mobileVerified: boolean;
+  emailVerified: boolean;
   selfieUploaded: boolean;
   documentUploaded: boolean;
   completed: boolean;

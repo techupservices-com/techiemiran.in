@@ -18,11 +18,12 @@ export function computeVerification(
       profile.pincode,
   );
   const completed =
-    profileConfirmed && profile.mobileVerified && selfieUploaded && documentUploaded;
+    profileConfirmed && profile.mobileVerified && profile.emailVerified && selfieUploaded && documentUploaded;
 
   return {
     profileConfirmed,
     mobileVerified: profile.mobileVerified,
+    emailVerified: profile.emailVerified,
     selfieUploaded,
     documentUploaded,
     completed,

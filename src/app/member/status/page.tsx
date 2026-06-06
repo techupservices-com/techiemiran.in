@@ -10,7 +10,7 @@ export default async function MemberStatusPage() {
 
   const items = [
     { label: "Unique mobile verified", done: member.verification.mobileVerified, href: "/member/mobile", action: "Review mobile" },
-    { label: "Profile details completed", done: member.verification.profileConfirmed, href: "/member/profile", action: member.verification.profileConfirmed ? "Review profile" : "Complete profile" },
+    { label: "Email verified", done: member.verification.emailVerified, href: "/member/email", action: member.verification.emailVerified ? "Review email" : "Verify email" },
     { label: "Selfie uploaded", done: member.verification.selfieUploaded, href: "/member/uploads", action: member.verification.selfieUploaded ? "Review uploads" : "Upload selfie" },
     { label: "Supporting document uploaded", done: member.verification.documentUploaded, href: "/member/uploads", action: member.verification.documentUploaded ? "Review uploads" : "Upload document" },
   ];

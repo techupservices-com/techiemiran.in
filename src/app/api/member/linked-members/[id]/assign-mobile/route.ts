@@ -24,7 +24,14 @@ export async function POST(request: Request, context: RouteContext<"/api/member/
     requestedByProfileId: session.subject,
     purpose: "linked_member_mobile_change",
   });
-  const { code } = await createOtp(member.id, normalized, "linked_member_mobile_change", requestRecord.id);
+  const { code } = await createOtp(
+    member.id,
+    normalized,
+    "linked_member_mobile_change",
+    "mobile",
+    "whatsapp",
+    requestRecord.id,
+  );
   const delivery = await sendOtpMessage({
     mobile: normalized,
     otp: code,

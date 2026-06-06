@@ -94,15 +94,19 @@ export default function Home() {
               <div className="grid gap-3">
                 <div className="soft-card rounded-[24px] border-white/70 bg-white/85 px-4 py-4 text-sm text-[var(--muted)] shadow-sm">
                   <span className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">Step 01</span>
-                  <p className="mt-2 leading-6">Enter your membership ID or current club mobile number.</p>
+                  <p className="mt-2 leading-6">Verify your mobile number using SMS or WhatsApp OTP.</p>
                 </div>
                 <div className="soft-card rounded-[24px] border-white/70 bg-white/85 px-4 py-4 text-sm text-[var(--muted)] shadow-sm">
                   <span className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">Step 02</span>
-                  <p className="mt-2 leading-6">Verify the OTP sent to your WhatsApp number.</p>
+                  <p className="mt-2 leading-6">Verify your email address using the OTP sent to your inbox.</p>
                 </div>
                 <div className="soft-card rounded-[24px] border-white/70 bg-white/85 px-4 py-4 text-sm text-[var(--muted)] shadow-sm">
                   <span className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">Step 03</span>
-                  <p className="mt-2 leading-6">Complete your profile, uploads, and linked member cleanup.</p>
+                  <p className="mt-2 leading-6">Upload your selfie and supporting document for record verification.</p>
+                </div>
+                <div className="soft-card rounded-[24px] border-white/70 bg-white/85 px-4 py-4 text-sm text-[var(--muted)] shadow-sm">
+                  <span className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">Step 04</span>
+                  <p className="mt-2 leading-6">Verify additional family member records wherever they share the same mobile number.</p>
                 </div>
               </div>
 

@@ -22,7 +22,14 @@ export async function POST(request: Request) {
     requestedByProfileId: member.id,
     purpose: "mobile_change",
   });
-  const { code } = await createOtp(member.id, normalizeMobile(body.newMobile), "mobile_change", requestRecord.id);
+  const { code } = await createOtp(
+    member.id,
+    normalizeMobile(body.newMobile),
+    "mobile_change",
+    "mobile",
+    "whatsapp",
+    requestRecord.id,
+  );
   const delivery = await sendOtpMessage({
     mobile: normalizeMobile(body.newMobile),
     otp: code,

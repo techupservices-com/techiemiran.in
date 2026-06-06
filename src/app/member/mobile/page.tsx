@@ -14,7 +14,11 @@ export default async function MemberMobilePage() {
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">Mobile step</p>
             <h2 className="mt-2 text-2xl font-semibold">Manage your mobile number</h2>
-            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Your first login OTP already confirms the current number. Use this page only if you need to change it.</p>
+            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+              {member?.verification.mobileVerified
+                ? "Your current mobile number is already verified. Use this page only if you need to change it."
+                : "Verify your mobile number here if you logged in using email or if your mobile still needs confirmation."}
+            </p>
           </div>
           <StatusChip label={member?.verification.mobileVerified ? "Completed" : "Pending"} tone={member?.verification.mobileVerified ? "success" : "warning"} />
         </div>

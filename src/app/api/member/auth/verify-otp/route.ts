@@ -5,7 +5,12 @@ import { addAuditLog, updateMember } from "@/lib/data";
 import { verifyOtp } from "@/lib/otp-store";
 
 export async function POST(request: Request) {
-  const schema = z.object({ profileId: z.string().min(1), otp: z.string().length(4) });
+  const schema = z.object({
+    profileId: z.string().min(1),
+    otp: z.string().length(4),
+    identifierType: z.enum(["mobile", "email"]),
+    deliveryChannel: z.enum(["sms", "whatsapp", "email"]),
+  });
   const body = schema.parse(await request.json());
   const result = await verifyOtp(body.profileId, "login", body.otp);
 
@@ -13,13 +18,16 @@ export async function POST(request: Request) {
     return Response.json({ error: result.reason }, { status: 400 });
   }
 
-  await updateMember(body.profileId, { mobileVerified: true });
+  await updateMember(body.profileId, {
+    ...(body.identifierType === "mobile" ? { mobileVerified: true } : {}),
+    ...(body.identifierType === "email" ? { emailVerified: true } : {}),
+  });
   await addAuditLog({
     actorType: "member",
     actorId: body.profileId,
-    action: "Verified login mobile via OTP",
+    action: `Verified login ${body.identifierType} via ${body.deliveryChannel} OTP`,
     targetProfileId: body.profileId,
-    metadata: { scope: "login-otp" },
+    metadata: { scope: "login-otp", identifierType: body.identifierType, deliveryChannel: body.deliveryChannel },
   });
 
   const response = Response.json({ message: "Verified." });

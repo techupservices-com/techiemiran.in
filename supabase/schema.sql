@@ -6,6 +6,7 @@ create table if not exists profiles (
   member_type text,
   status text default 'Active',
   email text,
+  email_verified boolean not null default false,
   current_mobile text,
   mobile_verified boolean not null default false,
   date_of_birth date,
@@ -26,6 +27,8 @@ create table if not exists otp_requests (
   profile_id uuid not null references profiles(id) on delete cascade,
   mobile text not null,
   purpose text not null,
+  identifier_type text,
+  delivery_channel text,
   otp_hash text not null,
   expires_at timestamptz not null,
   attempt_count int not null default 0,
@@ -72,6 +75,7 @@ create or replace view verification_status as
 select
   p.id as profile_id,
   p.mobile_verified,
+  p.email_verified,
   (p.membership_id is not null and p.full_name is not null and p.email is not null and p.current_mobile is not null and p.address1 is not null and p.city is not null and p.pincode is not null) as profile_confirmed,
   exists(select 1 from member_documents d where d.profile_id = p.id and d.document_type = 'selfie') as selfie_uploaded,
   exists(select 1 from member_documents d where d.profile_id = p.id and d.document_type = 'document') as document_uploaded

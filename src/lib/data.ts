@@ -12,6 +12,7 @@ interface ProfileRow {
   member_type: string | null;
   status: string | null;
   email: string | null;
+  email_verified: boolean | null;
   current_mobile: string | null;
   mobile_verified: boolean | null;
   date_of_birth: string | null;
@@ -73,6 +74,7 @@ function mapProfile(row: ProfileRow): MemberProfile {
     memberType: row.member_type ?? "",
     status: row.status ?? "",
     email: row.email ?? "",
+    emailVerified: Boolean(row.email_verified),
     currentMobile: row.current_mobile ?? "",
     mobileVerified: Boolean(row.mobile_verified),
     dateOfBirth: row.date_of_birth ?? "1970-01-01",
@@ -201,6 +203,7 @@ async function buildMembersWithVerification(profiles: ProfileRow[], documents: D
 function toProfileUpdates(updates: Partial<MemberProfile>) {
   return {
     ...(updates.email !== undefined ? { email: updates.email } : {}),
+    ...(updates.emailVerified !== undefined ? { email_verified: updates.emailVerified } : {}),
     ...(updates.currentMobile !== undefined
       ? { current_mobile: normalizeMobile(updates.currentMobile) }
       : {}),
@@ -229,15 +232,29 @@ export async function getMemberById(id: string) {
   return members.find((member) => member.id === id) ?? null;
 }
 
-export async function findMemberByIdentifier(identifier: string) {
+export async function findMemberByMobile(mobile: string) {
   const client = getRequiredSupabaseClient();
-
-  const normalized = normalizeMobile(identifier);
-  const value = identifier.trim();
   const { data, error } = await client
     .from("profiles")
     .select("*")
-    .or(`membership_id.eq.${value},current_mobile.eq.${normalized}`)
+    .eq("current_mobile", normalizeMobile(mobile))
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data) return null;
+  return mapProfile(data as ProfileRow);
+}
+
+export async function findMemberByEmail(email: string) {
+  const client = getRequiredSupabaseClient();
+  const { data, error } = await client
+    .from("profiles")
+    .select("*")
+    .ilike("email", email.trim())
     .limit(1)
     .maybeSingle();
 

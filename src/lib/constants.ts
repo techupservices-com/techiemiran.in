@@ -4,6 +4,7 @@ export const OTP_EXPIRY_MINUTES = 10;
 export const OTP_RESEND_SECONDS = 60;
 export const MEMBER_SESSION_HOURS = 24;
 export const PAGE_SIZE = 20;
+export const OTP_LENGTH = 4;
 export const SELFIE_BUCKET = "member-selfies";
 export const DOCUMENT_BUCKET = "member-documents";
 

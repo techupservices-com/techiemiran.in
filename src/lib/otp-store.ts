@@ -1,7 +1,7 @@
-import { OTP_EXPIRY_MINUTES } from "@/lib/constants";
+import { OTP_EXPIRY_MINUTES, OTP_LENGTH } from "@/lib/constants";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { hashValue } from "@/lib/utils";
-import type { OtpRecord, VerificationPurpose } from "@/lib/types";
+import type { IdentifierType, OtpDeliveryChannel, OtpRecord, VerificationPurpose } from "@/lib/types";
 
 function getRequiredSupabaseClient() {
   const client = createServerSupabaseClient();
@@ -16,6 +16,8 @@ function mapOtpRecord(record: {
   profile_id: string;
   mobile: string;
   purpose: VerificationPurpose;
+  identifier_type: IdentifierType | null;
+  delivery_channel: OtpDeliveryChannel | null;
   otp_hash: string;
   expires_at: string;
   created_at: string;
@@ -29,6 +31,8 @@ function mapOtpRecord(record: {
     profileId: record.profile_id,
     mobile: record.mobile,
     purpose: record.purpose,
+    identifierType: record.identifier_type ?? undefined,
+    deliveryChannel: record.delivery_channel ?? undefined,
     otpHash: record.otp_hash,
     expiresAt: record.expires_at,
     createdAt: record.created_at,
@@ -41,26 +45,33 @@ function mapOtpRecord(record: {
 
 export async function createOtp(
   profileId: string,
-  mobile: string,
+  destination: string,
   purpose: VerificationPurpose,
+  identifierType: IdentifierType,
+  deliveryChannel: OtpDeliveryChannel,
   referenceId?: string,
 ) {
   const client = getRequiredSupabaseClient();
-  const code = `${Math.floor(1000 + Math.random() * 9000)}`;
+  const min = 10 ** (OTP_LENGTH - 1);
+  const max = 10 ** OTP_LENGTH;
+  const code = `${Math.floor(min + Math.random() * (max - min))}`;
   const createdAt = new Date();
   const expiresAt = new Date(createdAt.getTime() + OTP_EXPIRY_MINUTES * 60 * 1000);
 
   await client
     .from("otp_requests")
-    .update({ verify_status: "expired" })
-    .eq("profile_id", profileId)
-    .eq("purpose", purpose)
-    .eq("verify_status", "pending");
+      .update({ verify_status: "expired" })
+      .eq("profile_id", profileId)
+      .eq("purpose", purpose)
+      .eq("delivery_channel", deliveryChannel)
+      .eq("verify_status", "pending");
 
   const payload = {
     profile_id: profileId,
-    mobile,
+    mobile: destination,
     purpose,
+    identifier_type: identifierType,
+    delivery_channel: deliveryChannel,
     otp_hash: hashValue(code),
     expires_at: expiresAt.toISOString(),
     attempt_count: 0,

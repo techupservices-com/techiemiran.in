@@ -51,6 +51,7 @@ export default async function AdminMemberDetailPage({ params }: { params: Promis
         <p className="mt-2 text-sm leading-6 text-[var(--muted)]">This panel shows what the system has marked complete and what is still missing for full verification.</p>
         <div className="mt-4 flex flex-wrap gap-3">
           <StatusChip label={member.verification.mobileVerified ? "Mobile verified" : "Mobile pending"} tone={member.verification.mobileVerified ? "success" : "warning"} />
+          <StatusChip label={member.verification.emailVerified ? "Email verified" : "Email pending"} tone={member.verification.emailVerified ? "success" : "warning"} />
           <StatusChip label={member.verification.profileConfirmed ? "Profile complete" : "Profile incomplete"} tone={member.verification.profileConfirmed ? "success" : "warning"} />
           <StatusChip label={member.verification.selfieUploaded ? "Selfie uploaded" : "Selfie missing"} tone={member.verification.selfieUploaded ? "success" : "warning"} />
           <StatusChip label={member.verification.documentUploaded ? "Document uploaded" : "Document missing"} tone={member.verification.documentUploaded ? "success" : "warning"} />

@@ -32,12 +32,12 @@ export default async function MemberDashboardPage() {
       cta: member.verification.mobileVerified ? "Review mobile" : "Verify mobile",
     },
     {
-      key: "profile",
-      href: "/member/profile",
-      title: "Complete your profile details",
-      description: "Check your email and address details so your member record is complete.",
-      done: member.verification.profileConfirmed,
-      cta: member.verification.profileConfirmed ? "Review details" : "Complete profile",
+      key: "email",
+      href: "/member/email",
+      title: "Email address verified",
+      description: "Verify your email address with an OTP so your voting record and future notifications stay secure.",
+      done: member.verification.emailVerified,
+      cta: member.verification.emailVerified ? "Review email" : "Verify email",
     },
     {
       key: "uploads",
