@@ -172,7 +172,7 @@ export function UploadForm({ items }: { items: ExistingUploadItem[] }) {
     const isUploading = uploadingSlot === key;
 
     return (
-      <div className="flex flex-col gap-2 text-sm text-[var(--muted)]">
+      <div className="flex flex-col gap-3 text-sm text-[var(--muted)]">
         <span>{getLabel(key)}</span>
         {preview ? (
           <div className={`relative flex max-w-[260px] ${getAspectClass(key)} items-center justify-center overflow-hidden rounded-[22px] border border-[var(--border)] bg-[#eef2fb]`}>
@@ -199,9 +199,14 @@ export function UploadForm({ items }: { items: ExistingUploadItem[] }) {
             await uploadSlot(key, file);
           }}
         />
-        <label htmlFor={key} className="inline-flex w-fit rounded-2xl bg-[#3c589e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2f467e]">
+        <button
+          type="button"
+          onClick={() => refs[key].current?.click()}
+          disabled={isUploading}
+          className="inline-flex w-fit rounded-2xl bg-[#3c589e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2f467e] disabled:opacity-60"
+        >
           {isUploading ? "Uploading..." : hasExisting ? "Replace file" : key === "selfie" ? "Upload selfie" : "Choose file"}
-        </label>
+        </button>
       </div>
     );
   }
@@ -214,8 +219,8 @@ export function UploadForm({ items }: { items: ExistingUploadItem[] }) {
 
       {renderSlot("selfie")}
 
-      <div className="grid gap-3 self-start">
-        <label className="grid gap-2 text-sm text-[var(--muted)]">
+      <div className="grid gap-4 self-start">
+        <label className="grid gap-3 text-sm text-[var(--muted)]">
           Supporting document type
           <select
             value={documentKind}
@@ -227,7 +232,7 @@ export function UploadForm({ items }: { items: ExistingUploadItem[] }) {
           </select>
         </label>
 
-        <div className="grid gap-4">
+        <div className="grid gap-5">
           {documentKind === "aadhar" ? (
             <>
               {renderSlot("aadharFront")}
