@@ -9,7 +9,7 @@ export async function POST(request: Request) {
 
   const schema = z.object({ requestId: z.string().min(1), otp: z.string().length(4) });
   const body = schema.parse(await request.json());
-  const result = await verifyOtp(session.subject, "email_verify", body.otp, body.requestId);
+  const result = await verifyOtp(session.subject, "email_verify", body.otp);
   if (!result.ok) return Response.json({ error: result.reason }, { status: 400 });
 
   await addAuditLog({ actorType: "member", actorId: session.subject, action: "Verified email via OTP", targetProfileId: session.subject, metadata: { scope: "email-otp" } });
