@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
@@ -77,7 +76,7 @@ export function UploadForm({ items }: { items: ExistingUploadItem[] }) {
   }
 
   function getAspectClass(key: SlotKey) {
-    return key === "selfie" ? "aspect-[4/5]" : "aspect-[4/3]";
+    return key === "selfie" ? "max-h-[300px]" : "max-h-[220px]";
   }
 
   function getPreviewUrl(key: SlotKey) {
@@ -177,7 +176,7 @@ export function UploadForm({ items }: { items: ExistingUploadItem[] }) {
         <span>{getLabel(key)}</span>
         <div className={`relative flex max-w-[260px] ${getAspectClass(key)} items-center justify-center overflow-hidden rounded-[22px] border border-[var(--border)] bg-[#eef2fb]`}>
           {preview ? (
-            <Image src={preview} alt={`${key} preview`} fill unoptimized className="object-contain bg-white" />
+            <img src={preview} alt={`${key} preview`} className="h-auto max-h-full w-full rounded-[22px] object-cover" />
           ) : (
             <span className="px-4 text-center text-sm font-semibold text-[#3c589e]">
               {key === "selfie" ? "Tap to choose your selfie" : "No file uploaded yet"}
