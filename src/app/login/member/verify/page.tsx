@@ -1,7 +1,38 @@
 import { Suspense } from "react";
 import { MemberOtpForm } from "@/components/auth/member-otp-form";
 
-export default function MemberVerifyPage() {
+function getOtpChannelCopy(deliveryChannel?: string, identifierType?: string) {
+  if (identifierType === "email") {
+    return {
+      intro: "Enter the email verification code to continue securely into your member account.",
+      security: "Use the exact 4-digit code received in your email inbox for this login.",
+      helper: "We have sent a 4-digit verification code to your registered email address.",
+    };
+  }
+
+  if (deliveryChannel === "sms") {
+    return {
+      intro: "Enter the SMS verification code to continue securely into your member account.",
+      security: "Use the exact 4-digit code received on your registered mobile number by SMS.",
+      helper: "We have sent a 4-digit verification code to your mobile number by SMS.",
+    };
+  }
+
+  return {
+    intro: "Enter the WhatsApp verification code to continue securely into your member account.",
+    security: "Use the exact 4-digit code received on WhatsApp for your registered mobile number.",
+    helper: "We have sent a 4-digit verification code to your mobile number on WhatsApp.",
+  };
+}
+
+export default async function MemberVerifyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ deliveryChannel?: string; identifierType?: string }>;
+}) {
+  const params = await searchParams;
+  const copy = getOtpChannelCopy(params.deliveryChannel, params.identifierType);
+
   return (
     <div className="min-h-screen px-4 py-6 md:px-6">
       <div className="mx-auto grid max-w-4xl gap-6 lg:grid-cols-[1.05fr_0.95fr]">
@@ -14,7 +45,7 @@ export default function MemberVerifyPage() {
             <p className="font-mono text-xs uppercase tracking-[0.34em] text-[#3c589e]">Poona Club member portal</p>
             <h1 className="mt-4 text-4xl font-semibold leading-[0.98] tracking-[-0.04em] md:text-6xl">Confirm your login</h1>
             <p className="mt-5 text-base leading-7 text-[var(--muted)] md:text-lg">
-              Enter the WhatsApp authentication code to continue securely into your member account.
+              {copy.intro}
             </p>
             <div className="mt-8 grid gap-3">
               <div className="rounded-[22px] border border-white/70 bg-white/80 px-4 py-4 text-sm text-[var(--muted)] shadow-sm">
@@ -23,7 +54,7 @@ export default function MemberVerifyPage() {
               </div>
               <div className="rounded-[22px] border border-white/70 bg-white/80 px-4 py-4 text-sm text-[var(--muted)] shadow-sm">
                 <span className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">Security check</span>
-                <p className="mt-2 leading-6">Use the exact 6-digit code received on WhatsApp for the registered number.</p>
+                <p className="mt-2 leading-6">{copy.security}</p>
               </div>
             </div>
           </div>
@@ -32,7 +63,7 @@ export default function MemberVerifyPage() {
         <section className="soft-card rounded-[34px] border-white/70 bg-white/88 p-6 md:p-8">
           <p className="font-mono text-xs uppercase tracking-[0.3em] text-[#3c589e]">Verify OTP</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em]">Enter your 4-digit code</h2>
-          <p className="mt-3 text-sm leading-6 text-[var(--muted)]">If you are using demo mode, the preview code from the previous screen can be used here directly.</p>
+          <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{copy.helper}</p>
           <div className="mt-6">
             <Suspense fallback={<p className="text-sm text-[var(--muted)]">Loading verification form...</p>}>
               <MemberOtpForm />

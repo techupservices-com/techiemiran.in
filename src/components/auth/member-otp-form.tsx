@@ -89,7 +89,7 @@ export function MemberOtpForm() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <span className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">
-              Sending {deliveryChannel.toUpperCase()} OTP to
+              Sending {deliveryChannel === "email" ? "EMAIL" : deliveryChannel === "sms" ? "SMS" : "WHATSAPP"} OTP to
             </span>
             <p className="mt-2 text-lg font-semibold">
               {getDestinationLabel(identifierType, mobile, email, identifier)}
@@ -107,7 +107,7 @@ export function MemberOtpForm() {
 
       {previewCode ? (
         <div className="rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-800">
-          Demo mode preview code: <span className="font-mono font-semibold tracking-[0.2em]">{previewCode}</span>
+          OTP preview code: <span className="font-mono font-semibold tracking-[0.2em]">{previewCode}</span>
         </div>
       ) : null}
 
