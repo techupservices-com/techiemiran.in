@@ -13,6 +13,7 @@ export function MemberSelfieUploader({ photoUrl, hasSelfie }: { photoUrl: string
   const inputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
   async function compressImage(file: File) {
     const imageUrl = URL.createObjectURL(file);
@@ -42,12 +43,22 @@ export function MemberSelfieUploader({ photoUrl, hasSelfie }: { photoUrl: string
 
   async function uploadSelfie(file: File) {
     setIsUploading(true);
+    setMessage(null);
     try {
+      if (!file.type.startsWith("image/")) {
+        throw new Error("Please choose an image file for the selfie upload.");
+      }
       const prepared = await compressImage(file);
       const formData = new FormData();
       formData.append("selfie", prepared);
       const response = await fetch("/api/member/uploads", { method: "POST", body: formData });
-      if (response.ok) router.refresh();
+      if (response.ok) {
+        router.refresh();
+      } else {
+        setMessage("Selfie upload failed. Please try again.");
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Selfie upload failed. Please try again.");
     } finally {
       setIsUploading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -87,7 +98,6 @@ export function MemberSelfieUploader({ photoUrl, hasSelfie }: { photoUrl: string
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
         className="hidden"
         onChange={(event) => {
           const file = event.target.files?.[0];
@@ -98,6 +108,7 @@ export function MemberSelfieUploader({ photoUrl, hasSelfie }: { photoUrl: string
         }}
       />
       {isUploading ? <p className="text-sm font-semibold text-[var(--muted)]">Uploading...</p> : null}
+      {message ? <p className="text-sm font-semibold text-red-600">{message}</p> : null}
     </div>
   );
 }

@@ -124,6 +124,10 @@ export function UploadForm({ items }: { items: ExistingUploadItem[] }) {
     setMessage(null);
 
     try {
+      if (key === "selfie" && !rawFile.type.startsWith("image/")) {
+        setMessage("Please choose an image file for the selfie upload.");
+        return;
+      }
       const file = await compressImage(rawFile);
       if (file.size > MAX_UPLOAD_BYTES) {
         setMessage("Selected file is too large. Please use a smaller image or lighter PDF document.");
@@ -198,7 +202,7 @@ export function UploadForm({ items }: { items: ExistingUploadItem[] }) {
           id={key}
           type="file"
           ref={refs[key]}
-          accept={key === "selfie" ? "image/*" : "image/*,.pdf"}
+          accept={key === "selfie" ? undefined : "image/*,.pdf"}
           className="hidden"
           onChange={async (event) => {
             const file = event.target.files?.[0];
