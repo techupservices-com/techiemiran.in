@@ -1,15 +1,20 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function EmailVerificationForm({ initialEmail = "", verified = false }: { initialEmail?: string; verified?: boolean }) {
+  const router = useRouter();
   const [email, setEmail] = useState(initialEmail);
   const [requestId, setRequestId] = useState<string | null>(null);
   const [otp, setOtp] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   async function requestOtp(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setIsSending(true);
     setMessage("Sending email OTP...");
     const response = await fetch("/api/member/email/request-verify", {
       method: "POST",
@@ -17,6 +22,7 @@ export function EmailVerificationForm({ initialEmail = "", verified = false }: {
       body: JSON.stringify({ email }),
     });
     const payload = await response.json();
+    setIsSending(false);
     if (!response.ok) {
       setMessage(payload.error ?? "Unable to send email OTP.");
       return;
@@ -28,6 +34,7 @@ export function EmailVerificationForm({ initialEmail = "", verified = false }: {
 
   async function verifyOtp(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setIsVerifying(true);
     setMessage("Verifying email OTP...");
     const response = await fetch("/api/member/email/verify", {
       method: "POST",
@@ -36,6 +43,11 @@ export function EmailVerificationForm({ initialEmail = "", verified = false }: {
     });
     const payload = await response.json();
     setMessage(response.ok ? payload.message : payload.error);
+    setIsVerifying(false);
+
+    if (response.ok) {
+      router.refresh();
+    }
   }
 
   return (
@@ -58,8 +70,8 @@ export function EmailVerificationForm({ initialEmail = "", verified = false }: {
             required
           />
         </label>
-        <button className="mt-4 rounded-2xl bg-[#3c589e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2f467e]">
-          Send email OTP
+        <button disabled={isSending} className="mt-4 rounded-2xl bg-[#3c589e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2f467e] disabled:opacity-60">
+          {isSending ? "Sending email OTP..." : "Send email OTP"}
         </button>
       </form>
 
@@ -80,12 +92,14 @@ export function EmailVerificationForm({ initialEmail = "", verified = false }: {
             required
           />
         </label>
-        <button disabled={!requestId} className="mt-4 rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--primary-strong)] disabled:opacity-50">
-          Verify email OTP
+        <button disabled={!requestId || isVerifying} className="mt-4 rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--primary-strong)] disabled:opacity-50">
+          {isVerifying ? "Verifying email OTP..." : "Verify email OTP"}
         </button>
       </form>
 
-      <p className="text-sm text-[var(--muted)] lg:col-span-2">{message ?? "Verify your email so the email verification step can be marked complete."}</p>
+      <p className={`text-sm lg:col-span-2 ${message && !message.toLowerCase().includes("successfully") && !message.toLowerCase().includes("otp sent") ? "font-semibold text-red-600" : "text-[var(--muted)]"}`}>
+        {message ?? "Verify your email so the email verification step can be marked complete."}
+      </p>
     </div>
   );
 }
