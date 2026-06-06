@@ -16,7 +16,7 @@ export async function sendSmsOtp(input: SendSmsOtpInput) {
     throw new Error("SMS provider credentials are missing.");
   }
 
-  const message = `Welcome To Poona Club Please Share OTP For Checked in your OTP No is ${input.otp} CSPL`;
+  const message = `Welcome To The Poona Club Ltd., Please Share OTP For Checked In Your OTP No Is ${input.otp} CSPL`;
   const url = new URL(baseUrl);
   url.searchParams.set("username", username);
   url.searchParams.set("pass", password);
