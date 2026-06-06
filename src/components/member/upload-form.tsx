@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
@@ -176,7 +177,14 @@ export function UploadForm({ items }: { items: ExistingUploadItem[] }) {
         <span>{getLabel(key)}</span>
         {preview ? (
           <div className={`relative flex max-w-[260px] ${getAspectClass(key)} items-center justify-center overflow-hidden rounded-[22px] border border-[var(--border)] bg-[#eef2fb]`}>
-            <img src={preview} alt={`${key} preview`} className="h-auto max-h-full w-full rounded-[22px] object-cover" />
+            <Image
+              src={preview}
+              alt={`${key} preview`}
+              width={800}
+              height={800}
+              unoptimized
+              className="h-auto max-h-full w-full rounded-[22px] object-cover"
+            />
           </div>
         ) : null}
         <input type="text" value={getFileName(key)} readOnly className="rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-[var(--foreground)]" />
