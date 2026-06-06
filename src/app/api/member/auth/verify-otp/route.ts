@@ -20,7 +20,6 @@ export async function POST(request: Request) {
 
   await updateMember(body.profileId, {
     ...(body.identifierType === "mobile" ? { mobileVerified: true } : {}),
-    ...(body.identifierType === "email" ? { emailVerified: true } : {}),
   });
   await addAuditLog({
     actorType: "member",

@@ -36,6 +36,13 @@ interface DocumentRow {
   uploaded_at: string;
 }
 
+interface OtpRequestRow {
+  profile_id: string;
+  purpose: string;
+  identifier_type: string | null;
+  verify_status: string;
+}
+
 interface MobileChangeRow {
   id: string;
   profile_id: string;
@@ -74,7 +81,7 @@ function mapProfile(row: ProfileRow): MemberProfile {
     memberType: row.member_type ?? "",
     status: row.status ?? "",
     email: row.email ?? "",
-    emailVerified: Boolean(row.email_verified),
+    emailVerified: false,
     currentMobile: row.current_mobile ?? "",
     mobileVerified: Boolean(row.mobile_verified),
     dateOfBirth: row.date_of_birth ?? "1970-01-01",
@@ -161,9 +168,14 @@ async function createSignedStorageUrl(bucket: string, filePath: string) {
 async function getProfilesAndDocuments() {
   const client = getRequiredSupabaseClient();
 
-  const [{ data: profiles, error: profilesError }, { data: documents, error: documentsError }] = await Promise.all([
+  const [
+    { data: profiles, error: profilesError },
+    { data: documents, error: documentsError },
+    { data: otpRequests, error: otpRequestsError },
+  ] = await Promise.all([
     client.from("profiles").select("*").order("full_name"),
     client.from("member_documents").select("*"),
+    client.from("otp_requests").select("profile_id,purpose,identifier_type,verify_status"),
   ]);
 
   if (profilesError) {
@@ -174,17 +186,33 @@ async function getProfilesAndDocuments() {
     throw documentsError;
   }
 
+  if (otpRequestsError) {
+    throw otpRequestsError;
+  }
+
   return {
     profiles: (profiles ?? []) as ProfileRow[],
     documents: (documents ?? []) as DocumentRow[],
+    otpRequests: (otpRequests ?? []) as OtpRequestRow[],
   };
 }
 
-async function buildMembersWithVerification(profiles: ProfileRow[], documents: DocumentRow[]) {
+async function buildMembersWithVerification(
+  profiles: ProfileRow[],
+  documents: DocumentRow[],
+  otpRequests: OtpRequestRow[],
+) {
   const client = getRequiredSupabaseClient();
 
   return Promise.all(profiles.map(async (row) => {
-    const profile = mapProfile(row);
+    const emailVerified = otpRequests.some(
+      (entry) =>
+        entry.profile_id === row.id &&
+        entry.verify_status === "verified" &&
+        entry.identifier_type === "email" &&
+        (entry.purpose === "login" || entry.purpose === "email_verify"),
+    );
+    const profile = { ...mapProfile(row), emailVerified };
     const memberDocuments = documents.filter((document) => document.profile_id === row.id).map(mapDocument);
     const linkedMemberCount = profiles.filter(
       (candidate) => normalizeMobile(candidate.current_mobile ?? "") === normalizeMobile(row.current_mobile ?? ""),
@@ -203,7 +231,6 @@ async function buildMembersWithVerification(profiles: ProfileRow[], documents: D
 function toProfileUpdates(updates: Partial<MemberProfile>) {
   return {
     ...(updates.email !== undefined ? { email: updates.email } : {}),
-    ...(updates.emailVerified !== undefined ? { email_verified: updates.emailVerified } : {}),
     ...(updates.currentMobile !== undefined
       ? { current_mobile: normalizeMobile(updates.currentMobile) }
       : {}),
@@ -224,7 +251,7 @@ function isUuid(value: string) {
 
 export async function listMembersWithVerification() {
   const result = await getProfilesAndDocuments();
-  return await buildMembersWithVerification(result.profiles, result.documents);
+  return await buildMembersWithVerification(result.profiles, result.documents, result.otpRequests);
 }
 
 export async function getMemberById(id: string) {

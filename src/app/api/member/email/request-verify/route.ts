@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   const member = await getMemberById(session.subject);
   if (!member) return Response.json({ error: "Member not found." }, { status: 404 });
 
-  await updateMember(member.id, { email: body.email, emailVerified: false });
+  await updateMember(member.id, { email: body.email });
   const { record, code } = await createOtp(member.id, body.email, "email_verify", "email", "email");
   await sendEmailOtp({ email: body.email, otp: code, memberName: member.fullName });
   await addAuditLog({ actorType: "member", actorId: member.id, action: "Requested email verification OTP", targetProfileId: member.id, metadata: { scope: "email-otp" } });
