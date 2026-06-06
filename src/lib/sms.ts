@@ -10,7 +10,6 @@ export async function sendSmsOtp(input: SendSmsOtpInput) {
   const password = process.env.SMS_PASSWORD;
   const senderId = process.env.SMS_SENDER_ID ?? "INFOCS";
   const route = process.env.SMS_ROUTE ?? "trans1";
-  const templateId = process.env.SMS_TEMPLATE_ID ?? "TEMPID454567";
   const baseUrl = process.env.SMS_API_URL ?? "http://173.45.76.227/send.aspx";
 
   if (!username || !password) {
@@ -25,7 +24,7 @@ export async function sendSmsOtp(input: SendSmsOtpInput) {
   url.searchParams.set("senderid", senderId);
   url.searchParams.set("numbers", input.mobile);
   url.searchParams.set("message", message);
-  url.searchParams.set("templateid", templateId);
+  url.searchParams.set("ispreapproved", "1");
 
   const response = await fetch(url.toString());
   const text = (await response.text()).trim();
