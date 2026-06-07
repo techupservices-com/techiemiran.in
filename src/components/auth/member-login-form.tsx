@@ -13,6 +13,7 @@ export function MemberLoginForm({ initialIdentifier = "" }: { initialIdentifier?
   const [identifier, setIdentifier] = useState(initialIdentifier);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const identifierType = useMemo(() => detectIdentifierType(identifier), [identifier]);
   const deliveryChannel = identifierType === "email" ? "email" : "mobile";
@@ -28,12 +29,15 @@ export function MemberLoginForm({ initialIdentifier = "" }: { initialIdentifier?
       body: JSON.stringify({ identifier, identifierType, deliveryChannel }),
     });
     const payload = await response.json();
-    setIsLoading(false);
 
     if (!response.ok) {
+      setIsLoading(false);
       setError(payload.error ?? "Unable to send OTP.");
       return;
     }
+
+    setIsLoading(false);
+    setIsRedirecting(true);
 
     const query = new URLSearchParams({
       identifier,
@@ -77,10 +81,12 @@ export function MemberLoginForm({ initialIdentifier = "" }: { initialIdentifier?
 
       <button
         type="submit"
-        disabled={isLoading}
+        disabled={isLoading || isRedirecting}
         className="w-full rounded-2xl bg-[#3c589e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2f467e] disabled:opacity-60"
       >
-        {isLoading
+        {isRedirecting
+          ? "Redirecting..."
+          : isLoading
           ? deliveryChannel === "email"
             ? "Sending email OTP..."
             : "Sending OTP..."

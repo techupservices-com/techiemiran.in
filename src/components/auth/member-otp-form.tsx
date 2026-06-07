@@ -16,6 +16,7 @@ export function MemberOtpForm() {
   const [otp, setOtp] = useState(searchParams.get("previewCode") ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(OTP_RESEND_SECONDS);
   const [previewCode, setPreviewCode] = useState(searchParams.get("previewCode") ?? "");
@@ -72,12 +73,15 @@ export function MemberOtpForm() {
       body: JSON.stringify({ profileId, identifier, identifierType, deliveryChannel, otp }),
     });
     const payload = await response.json();
-    setIsLoading(false);
 
     if (!response.ok) {
+      setIsLoading(false);
       setError(payload.error ?? "OTP verification failed.");
       return;
     }
+
+    setIsLoading(false);
+    setIsRedirecting(true);
 
     router.push("/member");
     router.refresh();
@@ -89,7 +93,7 @@ export function MemberOtpForm() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <span className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">
-              Sending {deliveryChannel === "email" ? "EMAIL" : "SMS + WHATSAPP"} OTP to
+              {deliveryChannel === "email" ? "EMAIL OTP Sent to" : "SMS + WHATSAPP OTP Sent to"}
             </span>
             <p className="mt-2 text-lg font-semibold">
               {getDestinationLabel(identifierType, mobile, email, identifier)}
@@ -146,10 +150,10 @@ export function MemberOtpForm() {
 
       <button
         type="submit"
-        disabled={isLoading}
+        disabled={isLoading || isRedirecting}
         className="w-full rounded-2xl bg-[#3c589e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2f467e] disabled:opacity-60"
       >
-        {isLoading ? "Verifying..." : "Verify and continue"}
+        {isRedirecting ? "Redirecting..." : isLoading ? "Verifying..." : "Verify and continue"}
       </button>
     </form>
   );
