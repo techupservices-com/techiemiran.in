@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { MemberLoginForm } from "@/components/auth/member-login-form";
+import { HomepageMemberLoginFlow } from "@/components/auth/homepage-member-login-flow";
 
 export default async function Home({
   searchParams,
@@ -109,12 +109,7 @@ export default async function Home({
               </div>
 
               <section className="soft-card rounded-[30px] border-white/70 bg-white/88 p-6 md:p-8">
-                <p className="font-mono text-xs uppercase tracking-[0.3em] text-[#3c589e]">Request OTP</p>
-                <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em]">Access your account</h2>
-                <p className="mt-3 text-sm leading-6 text-[var(--muted)]">Enter your registered mobile number or email address to receive your OTP and continue with the verification process.</p>
-                <div className="mt-6">
-                  <MemberLoginForm initialIdentifier={params.identifier ?? ""} />
-                </div>
+                <HomepageMemberLoginFlow initialIdentifier={params.identifier ?? ""} />
               </section>
             </div>
           </div>

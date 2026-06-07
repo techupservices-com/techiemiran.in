@@ -4,28 +4,38 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { OTP_RESEND_SECONDS } from "@/lib/constants";
 import { formatMobile } from "@/lib/utils";
+import type { MemberOtpRequestResult } from "@/components/auth/member-login-form";
 
 function getDestinationLabel(identifierType: string, mobile: string, email: string, identifier: string) {
   if (identifierType === "email") return email || identifier;
   return formatMobile(mobile || identifier);
 }
 
-export function MemberOtpForm() {
+export function MemberOtpForm({
+  data,
+  onEdit,
+  onVerified,
+}: {
+  data?: MemberOtpRequestResult;
+  onEdit?: () => void;
+  onVerified?: () => void;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [otp, setOtp] = useState(searchParams.get("previewCode") ?? "");
+  const initialPreviewCode = data?.previewCode ?? searchParams.get("previewCode") ?? "";
+  const [otp, setOtp] = useState(initialPreviewCode);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(OTP_RESEND_SECONDS);
-  const [previewCode, setPreviewCode] = useState(searchParams.get("previewCode") ?? "");
-  const [profileId, setProfileId] = useState(searchParams.get("profileId") ?? "");
-  const [mobile, setMobile] = useState(searchParams.get("mobile") ?? "");
-  const [email, setEmail] = useState(searchParams.get("email") ?? "");
-  const identifier = searchParams.get("identifier") ?? "";
-  const identifierType = searchParams.get("identifierType") ?? "mobile";
-  const deliveryChannel = searchParams.get("deliveryChannel") ?? "mobile";
+  const [previewCode, setPreviewCode] = useState(initialPreviewCode);
+  const [profileId, setProfileId] = useState(data?.profileId ?? searchParams.get("profileId") ?? "");
+  const [mobile, setMobile] = useState(data?.mobile ?? searchParams.get("mobile") ?? "");
+  const [email, setEmail] = useState(data?.email ?? searchParams.get("email") ?? "");
+  const identifier = data?.identifier ?? searchParams.get("identifier") ?? "";
+  const identifierType = data?.identifierType ?? (searchParams.get("identifierType") as "mobile" | "email" | null) ?? "mobile";
+  const deliveryChannel = data?.deliveryChannel ?? (searchParams.get("deliveryChannel") as "mobile" | "email" | null) ?? "mobile";
 
   useEffect(() => {
     if (secondsLeft <= 0) return;
@@ -83,6 +93,11 @@ export function MemberOtpForm() {
     setIsLoading(false);
     setIsRedirecting(true);
 
+    if (onVerified) {
+      onVerified();
+      return;
+    }
+
     router.push("/member");
     router.refresh();
   }
@@ -101,7 +116,13 @@ export function MemberOtpForm() {
           </div>
           <button
             type="button"
-            onClick={() => router.push(`/?identifier=${encodeURIComponent(identifier)}`)}
+            onClick={() => {
+              if (onEdit) {
+                onEdit();
+                return;
+              }
+              router.push(`/?identifier=${encodeURIComponent(identifier)}`);
+            }}
             className="rounded-full border border-[#b9c8ea] bg-white px-4 py-2 text-sm font-semibold text-[#3c589e] hover:border-[#6f84ba] hover:bg-[#dfe6f8]"
           >
             Edit

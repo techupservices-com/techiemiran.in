@@ -3,12 +3,28 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
+export interface MemberOtpRequestResult {
+  identifier: string;
+  identifierType: "mobile" | "email";
+  deliveryChannel: "mobile" | "email";
+  profileId: string;
+  mobile: string;
+  email: string;
+  previewCode?: string;
+}
+
 function detectIdentifierType(value: string) {
   const trimmed = value.trim();
   return trimmed.includes("@") ? "email" : "mobile";
 }
 
-export function MemberLoginForm({ initialIdentifier = "" }: { initialIdentifier?: string }) {
+export function MemberLoginForm({
+  initialIdentifier = "",
+  onSuccess,
+}: {
+  initialIdentifier?: string;
+  onSuccess?: (result: MemberOtpRequestResult) => void;
+}) {
   const router = useRouter();
   const [identifier, setIdentifier] = useState(initialIdentifier);
   const [error, setError] = useState<string | null>(null);
@@ -37,19 +53,35 @@ export function MemberLoginForm({ initialIdentifier = "" }: { initialIdentifier?
     }
 
     setIsLoading(false);
-    setIsRedirecting(true);
 
-    const query = new URLSearchParams({
+    const result: MemberOtpRequestResult = {
       identifier,
       identifierType,
       deliveryChannel,
       profileId: payload.profileId,
       mobile: payload.mobile ?? "",
       email: payload.email ?? "",
+      previewCode: payload.previewCode,
+    };
+
+    if (onSuccess) {
+      onSuccess(result);
+      return;
+    }
+
+    setIsRedirecting(true);
+
+    const query = new URLSearchParams({
+      identifier: result.identifier,
+      identifierType: result.identifierType,
+      deliveryChannel: result.deliveryChannel,
+      profileId: result.profileId,
+      mobile: result.mobile,
+      email: result.email,
     });
 
-    if (payload.previewCode) {
-      query.set("previewCode", payload.previewCode);
+    if (result.previewCode) {
+      query.set("previewCode", result.previewCode);
     }
 
     router.push(`/login/member/verify?${query.toString()}`);
