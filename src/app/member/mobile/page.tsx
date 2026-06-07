@@ -23,7 +23,7 @@ export default async function MemberMobilePage() {
           <StatusChip label={member?.verification.mobileVerified ? "Completed" : "Pending"} tone={member?.verification.mobileVerified ? "success" : "warning"} />
         </div>
       </div>
-      <MobileChangeForm />
+      <MobileChangeForm initialMobile={member?.currentMobile ?? ""} verified={member?.verification.mobileVerified} />
     </section>
   );
 }

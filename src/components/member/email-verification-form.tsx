@@ -5,7 +5,7 @@ import { useState } from "react";
 
 export function EmailVerificationForm({ initialEmail = "", verified = false }: { initialEmail?: string; verified?: boolean }) {
   const router = useRouter();
-  const [email, setEmail] = useState(initialEmail);
+  const [email, setEmail] = useState(verified ? "" : initialEmail);
   const [requestId, setRequestId] = useState<string | null>(null);
   const [otp, setOtp] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -59,6 +59,7 @@ export function EmailVerificationForm({ initialEmail = "", verified = false }: {
 
       setIsUpdating(true);
       if (response.ok) {
+        setEmail("");
         router.refresh();
       }
     } finally {
@@ -73,9 +74,7 @@ export function EmailVerificationForm({ initialEmail = "", verified = false }: {
           <p className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">Step 1</p>
           <h3 className="mt-2 text-lg font-semibold">Enter your email address</h3>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            {verified
-              ? "Your email address is already verified. Send a fresh OTP only if you need to update or re-verify it."
-              : "Enter the email address you want to verify for your member account."}
+            Enter the email address you want to verify for your member account.
           </p>
           <label className="mt-4 grid gap-2 text-sm text-[var(--muted)]">
             Email address
