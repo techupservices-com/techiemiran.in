@@ -49,7 +49,7 @@ export function MemberVerificationWizard({
           title: "Selfie upload / replace",
           description: "Upload or replace your selfie to complete this verification step.",
           done: member.verification.selfieUploaded,
-          render: <MemberSelfieUploader photoUrl={selfieItem?.previewUrl ?? null} hasSelfie={selfieUploaded} />,
+          render: <MemberSelfieUploader photoUrl={selfieItem?.previewUrl ?? null} hasSelfie={selfieUploaded} variant="panel" />,
         },
         ...(requiresLinkedMemberCleanup
           ? [

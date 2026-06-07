@@ -8,7 +8,15 @@ import { useEffect, useRef, useState } from "react";
 const MAX_IMAGE_DIMENSION = 1600;
 const JPEG_QUALITY = 0.82;
 
-export function MemberSelfieUploader({ photoUrl, hasSelfie }: { photoUrl: string | null; hasSelfie: boolean }) {
+export function MemberSelfieUploader({
+  photoUrl,
+  hasSelfie,
+  variant = "record",
+}: {
+  photoUrl: string | null;
+  hasSelfie: boolean;
+  variant?: "record" | "panel";
+}) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -99,7 +107,7 @@ export function MemberSelfieUploader({ photoUrl, hasSelfie }: { photoUrl: string
             if (uploadState !== "uploading") inputRef.current?.click();
           }
         }}
-        className={`group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-[28px] border border-[var(--border)] bg-[#eef2fb] shadow-sm sm:aspect-[4/5] lg:max-h-[236px] ${uploadState === "uploading" ? "pointer-events-none opacity-90" : ""}`}
+        className={`group relative flex items-center justify-center overflow-hidden rounded-[28px] border border-[var(--border)] bg-[#eef2fb] shadow-sm ${variant === "panel" ? "aspect-[4/5] w-[180px] sm:w-[210px] md:w-[220px]" : "aspect-square w-full sm:aspect-[4/5] lg:max-h-[236px]"} ${uploadState === "uploading" ? "pointer-events-none opacity-90" : ""}`}
       >
         {previewUrl || photoUrl ? (
           <Image src={previewUrl || photoUrl!} alt="Member selfie" fill unoptimized className="object-cover" />
