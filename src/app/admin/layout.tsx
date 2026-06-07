@@ -6,7 +6,6 @@ import { getAdminSession } from "@/lib/auth";
 const nav = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/members", label: "Members" },
-  { href: "/admin/documents", label: "Documents" },
   { href: "/admin/audit", label: "Audit" },
 ];
 

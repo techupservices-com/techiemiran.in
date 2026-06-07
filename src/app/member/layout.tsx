@@ -21,14 +21,14 @@ export default async function MemberLayout({ children }: { children: React.React
   const completedSteps = [
     member.verification.mobileVerified,
     member.verification.emailVerified,
-    member.verification.selfieUploaded && member.verification.documentUploaded,
+    member.verification.selfieUploaded,
     !requiresLinkedMemberCleanup,
   ].slice(0, totalSteps).filter(Boolean).length;
   const nextPendingStep = [
     !member.verification.mobileVerified ? "Verify your mobile number" : null,
     !member.verification.emailVerified ? "Verify your email address" : null,
-    !(member.verification.selfieUploaded && member.verification.documentUploaded)
-      ? "Upload selfie and supporting document"
+    !member.verification.selfieUploaded
+      ? "Upload your selfie"
       : null,
     requiresLinkedMemberCleanup ? "Resolve shared family mobile numbers" : null,
   ].find(Boolean);

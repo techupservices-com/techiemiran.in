@@ -14,23 +14,13 @@ type StepKey = "mobile" | "email" | "uploads" | "linked-members";
 
 const COMPLETE_MODAL_KEY = "pc-member-verification-complete";
 
-interface UploadItem {
-  id: string;
-  documentGroup: string;
-  documentPart: string;
-  fileName: string;
-  previewUrl: string | null;
-}
-
 export function MemberVerificationWizard({
   member,
   linkedMembers,
-  uploadItems,
   requiresLinkedMemberCleanup,
 }: {
   member: MemberWithVerification;
   linkedMembers: MemberWithVerification[];
-  uploadItems: UploadItem[];
   requiresLinkedMemberCleanup: boolean;
 }) {
   const steps = useMemo(
@@ -52,10 +42,10 @@ export function MemberVerificationWizard({
         },
         {
           key: "uploads" as const,
-          title: "Selfie / supporting documents upload / replace",
-          description: "Upload or replace your selfie and the required supporting document pages.",
-          done: member.verification.selfieUploaded && member.verification.documentUploaded,
-          render: <UploadForm items={uploadItems} />,
+          title: "Selfie upload / replace",
+          description: "Upload or replace your selfie to complete this verification step.",
+          done: member.verification.selfieUploaded,
+          render: <UploadForm />,
         },
         ...(requiresLinkedMemberCleanup
           ? [
@@ -72,12 +62,10 @@ export function MemberVerificationWizard({
     [
       linkedMembers,
       member.email,
-      member.verification.documentUploaded,
       member.verification.emailVerified,
       member.verification.mobileVerified,
       member.verification.selfieUploaded,
       requiresLinkedMemberCleanup,
-      uploadItems,
     ],
   );
 

@@ -98,7 +98,7 @@ export default function Home() {
                 </div>
                 <div className="soft-card rounded-[24px] border-white/70 bg-white/85 px-4 py-4 text-sm text-[var(--muted)] shadow-sm">
                   <span className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">Step 03</span>
-                  <p className="mt-2 leading-6">Upload your selfie and supporting document for record verification.</p>
+                  <p className="mt-2 leading-6">Upload your selfie for record verification.</p>
                 </div>
                 <div className="soft-card rounded-[24px] border-white/70 bg-white/85 px-4 py-4 text-sm text-[var(--muted)] shadow-sm">
                   <span className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">Step 04</span>

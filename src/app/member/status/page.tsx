@@ -12,7 +12,6 @@ export default async function MemberStatusPage() {
     { label: "Unique mobile verified", done: member.verification.mobileVerified, href: "/member/mobile", action: "Review mobile" },
     { label: "Email verified", done: member.verification.emailVerified, href: "/member/email", action: member.verification.emailVerified ? "Review email" : "Verify email" },
     { label: "Selfie uploaded", done: member.verification.selfieUploaded, href: "/member/uploads", action: member.verification.selfieUploaded ? "Review uploads" : "Upload selfie" },
-    { label: "Supporting document uploaded", done: member.verification.documentUploaded, href: "/member/uploads", action: member.verification.documentUploaded ? "Review uploads" : "Upload document" },
   ];
 
   return (

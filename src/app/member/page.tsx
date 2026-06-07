@@ -1,5 +1,5 @@
 import { getMemberSession } from "@/lib/auth";
-import { getLinkedMembers, getMemberById, getMemberDocumentPreviewUrl, getMemberProfilePhotoUrl, isMobileLoginOwner, listDocuments } from "@/lib/data";
+import { getLinkedMembers, getMemberById, getMemberProfilePhotoUrl, isMobileLoginOwner, listDocuments } from "@/lib/data";
 import { MemberSelfieUploader } from "@/components/member/member-selfie-uploader";
 import { MemberVerificationWizard } from "@/components/member/member-verification-wizard";
 import { formatMobile } from "@/lib/utils";
@@ -16,31 +16,6 @@ export default async function MemberDashboardPage() {
   const requiresLinkedMemberCleanup =
     linkedMembers.length > 1 && linkedMembers.some((entry) => !entry.mobileVerified);
   const mobileOwner = await isMobileLoginOwner(member.id, member.currentMobile);
-
-  const orderedDocuments = [...documents].sort((left, right) => {
-    const order = [
-      "selfie:selfie",
-      "aadhar:front",
-      "aadhar:back",
-      "passport:first_page",
-      "passport:last_page",
-      "legacy:legacy",
-    ];
-    return order.indexOf(`${left.documentGroup}:${left.documentPart}`) - order.indexOf(`${right.documentGroup}:${right.documentPart}`);
-  });
-
-  const uploadItems = await Promise.all(
-    orderedDocuments.map(async (document) => ({
-      id: document.id,
-      documentGroup: document.documentGroup,
-      documentPart: document.documentPart,
-      fileName: document.fileName,
-      previewUrl:
-        document.documentType === "selfie"
-          ? profilePhotoUrl
-          : await getMemberDocumentPreviewUrl(document),
-    })),
-  );
 
   return (
     <>
@@ -96,10 +71,9 @@ export default async function MemberDashboardPage() {
       </section>
 
       <MemberVerificationWizard
-        key={`${member.id}-${member.verification.mobileVerified}-${member.verification.emailVerified}-${member.verification.selfieUploaded}-${member.verification.documentUploaded}-${requiresLinkedMemberCleanup}-${linkedMembers.filter((entry) => !entry.mobileVerified).length}`}
+        key={`${member.id}-${member.verification.mobileVerified}-${member.verification.emailVerified}-${member.verification.selfieUploaded}-${requiresLinkedMemberCleanup}-${linkedMembers.filter((entry) => !entry.mobileVerified).length}`}
         member={member}
         linkedMembers={linkedMembers}
-        uploadItems={uploadItems}
         requiresLinkedMemberCleanup={requiresLinkedMemberCleanup}
       />
 
