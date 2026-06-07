@@ -11,11 +11,12 @@ export function EmailVerificationForm({ initialEmail = "", verified = false }: {
   const [message, setMessage] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   async function requestOtp(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSending(true);
-    setMessage("Sending email OTP...");
+    setMessage(null);
 
     try {
       const response = await fetch("/api/member/email/request-verify", {
@@ -33,7 +34,6 @@ export function EmailVerificationForm({ initialEmail = "", verified = false }: {
       setRequestId(payload.requestId);
       setEmail(payload.email ?? email);
       setOtp(payload.previewCode ?? "");
-      setMessage(`OTP sent to ${payload.email ?? email}.`);
     } finally {
       setIsSending(false);
     }
@@ -43,7 +43,7 @@ export function EmailVerificationForm({ initialEmail = "", verified = false }: {
     event.preventDefault();
     if (!requestId) return;
     setIsVerifying(true);
-    setMessage("Verifying email OTP...");
+    setMessage(null);
 
     try {
       const response = await fetch("/api/member/email/verify", {
@@ -52,7 +52,12 @@ export function EmailVerificationForm({ initialEmail = "", verified = false }: {
         body: JSON.stringify({ requestId, otp }),
       });
       const payload = await response.json();
-      setMessage(response.ok ? payload.message : payload.error);
+      if (!response.ok) {
+        setMessage(payload.error ?? "Unable to verify email OTP.");
+        return;
+      }
+
+      setIsUpdating(true);
       if (response.ok) {
         router.refresh();
       }
@@ -104,17 +109,13 @@ export function EmailVerificationForm({ initialEmail = "", verified = false }: {
               required
             />
           </label>
-          <button disabled={isVerifying} className="mt-4 rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--primary-strong)] disabled:opacity-50">
-            {isVerifying ? "Verifying email OTP..." : "Verify email OTP"}
+          <button disabled={isVerifying || isUpdating} className="mt-4 rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--primary-strong)] disabled:opacity-50">
+            {isUpdating ? "Updating..." : isVerifying ? "Verifying email OTP..." : "Verify email OTP"}
           </button>
         </form>
       )}
 
-      {message ? (
-        <p className={`text-sm ${!message.toLowerCase().includes("success") && !message.toLowerCase().includes("otp sent") ? "font-semibold text-red-600" : "text-[var(--muted)]"}`}>
-          {message}
-        </p>
-      ) : null}
+      {message ? <p className="text-sm font-semibold text-red-600">{message}</p> : null}
     </div>
   );
 }

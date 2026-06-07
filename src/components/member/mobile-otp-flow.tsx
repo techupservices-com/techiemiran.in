@@ -31,11 +31,12 @@ export function MobileOtpFlow({
   const [message, setMessage] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   async function requestOtp(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSending(true);
-    setMessage("Sending OTP...");
+    setMessage(null);
 
     try {
       const response = await fetch(requestEndpoint, {
@@ -56,7 +57,6 @@ export function MobileOtpFlow({
       setRequestId(payload.requestId);
       setMobile(payload.mobile ?? mobile);
       setOtp(payload.previewCode ?? "");
-      setMessage(`OTP sent to ${payload.mobile ?? mobile} by SMS and WhatsApp.`);
     } finally {
       setIsSending(false);
     }
@@ -66,7 +66,7 @@ export function MobileOtpFlow({
     event.preventDefault();
     if (!requestId) return;
     setIsVerifying(true);
-    setMessage("Verifying OTP...");
+    setMessage(null);
 
     try {
       const response = await fetch(verifyEndpoint, {
@@ -77,10 +77,13 @@ export function MobileOtpFlow({
         ),
       });
       const payload = await response.json();
-      setMessage(response.ok ? payload.message : payload.error);
-      if (response.ok) {
-        onVerified?.();
+      if (!response.ok) {
+        setMessage(payload.error ?? "Unable to verify OTP.");
+        return;
       }
+
+      setIsUpdating(true);
+      onVerified?.();
     } finally {
       setIsVerifying(false);
     }
@@ -127,17 +130,13 @@ export function MobileOtpFlow({
               required
             />
           </label>
-          <button disabled={isVerifying} className="mt-4 rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--primary-strong)] disabled:opacity-50">
-            {isVerifying ? "Verifying..." : verifyButtonLabel}
+          <button disabled={isVerifying || isUpdating} className="mt-4 rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-semibold text-white hover:bg-[var(--primary-strong)] disabled:opacity-50">
+            {isUpdating ? "Updating..." : isVerifying ? "Verifying..." : verifyButtonLabel}
           </button>
         </form>
       )}
 
-      {message ? (
-        <p className={`text-sm ${!message.toLowerCase().includes("success") && !message.toLowerCase().includes("otp sent") ? "font-semibold text-red-600" : "text-[var(--muted)]"}`}>
-          {message}
-        </p>
-      ) : null}
+      {message ? <p className="text-sm font-semibold text-red-600">{message}</p> : null}
     </div>
   );
 }
