@@ -11,7 +11,7 @@ export async function sendEmailOtp(input: SendEmailOtpInput) {
   const port = Number(process.env.SMTP_PORT ?? 465);
   const user = process.env.SMTP_USER ?? "support@techupservices.com";
   const pass = process.env.SMTP_PASS;
-  const fromEmail = process.env.SMTP_FROM_EMAIL ?? user;
+  const fromEmail = process.env.SMTP_FROM_EMAIL ?? "support@pclprofile.com";
   const fromName = process.env.SMTP_FROM_NAME ?? "Poona Club";
 
   if (!pass) {
