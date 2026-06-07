@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-type DeliveryChannel = "sms" | "whatsapp";
-
 export function MobileOtpFlow({
   title,
   description,
@@ -23,12 +21,11 @@ export function MobileOtpFlow({
   requestEndpoint: string;
   verifyEndpoint: string;
   verifyButtonLabel: string;
-  requestPayloadBuilder?: (mobile: string, deliveryChannel: DeliveryChannel) => Record<string, unknown>;
+  requestPayloadBuilder?: (mobile: string) => Record<string, unknown>;
   verifyPayloadBuilder?: (requestId: string, otp: string) => Record<string, unknown>;
   onVerified?: () => void;
 }) {
   const [mobile, setMobile] = useState(initialMobile);
-  const [deliveryChannel, setDeliveryChannel] = useState<DeliveryChannel>("whatsapp");
   const [requestId, setRequestId] = useState<string | null>(null);
   const [otp, setOtp] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -38,7 +35,7 @@ export function MobileOtpFlow({
   async function requestOtp(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSending(true);
-    setMessage(deliveryChannel === "whatsapp" ? "Sending WhatsApp OTP..." : "Sending SMS OTP...");
+    setMessage("Sending OTP...");
 
     try {
       const response = await fetch(requestEndpoint, {
@@ -46,8 +43,8 @@ export function MobileOtpFlow({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
           requestPayloadBuilder
-            ? requestPayloadBuilder(mobile, deliveryChannel)
-            : { newMobile: mobile, deliveryChannel },
+            ? requestPayloadBuilder(mobile)
+            : { newMobile: mobile },
         ),
       });
       const payload = await response.json();
@@ -59,7 +56,7 @@ export function MobileOtpFlow({
       setRequestId(payload.requestId);
       setMobile(payload.mobile ?? mobile);
       setOtp(payload.previewCode ?? "");
-      setMessage(`OTP sent to ${payload.mobile ?? mobile} via ${deliveryChannel === "whatsapp" ? "WhatsApp" : "SMS"}.`);
+      setMessage(`OTP sent to ${payload.mobile ?? mobile} by SMS and WhatsApp.`);
     } finally {
       setIsSending(false);
     }
@@ -106,23 +103,10 @@ export function MobileOtpFlow({
             />
           </label>
           <div className="mt-4 rounded-[22px] border border-[var(--border)] bg-white px-4 py-4 text-sm text-[var(--muted)]">
-            <label className="flex items-start gap-3">
-              <input
-                type="checkbox"
-                checked={deliveryChannel === "whatsapp"}
-                onChange={(event) => setDeliveryChannel(event.target.checked ? "whatsapp" : "sms")}
-                className="mt-1 h-4 w-4 rounded border-[var(--border)] text-[#3c589e]"
-              />
-              <span>
-                Receive OTP on WhatsApp
-                <span className="mt-1 block text-xs text-[var(--muted)]">
-                  Uncheck this option to receive your OTP by SMS instead.
-                </span>
-              </span>
-            </label>
+            A 4-digit OTP will be sent to this mobile number by both SMS and WhatsApp.
           </div>
           <button disabled={isSending} className="mt-4 rounded-2xl bg-[#3c589e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2f467e] disabled:opacity-60">
-            {isSending ? deliveryChannel === "whatsapp" ? "Sending WhatsApp OTP..." : "Sending SMS OTP..." : deliveryChannel === "whatsapp" ? "Send WhatsApp OTP" : "Send SMS OTP"}
+            {isSending ? "Sending OTP..." : "Send OTP"}
           </button>
         </form>
       ) : (
@@ -130,7 +114,7 @@ export function MobileOtpFlow({
           <p className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">Step 2</p>
           <h3 className="mt-2 text-lg font-semibold">Verify OTP</h3>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            Enter the 4-digit {deliveryChannel === "whatsapp" ? "WhatsApp" : "SMS"} OTP sent to {mobile}.
+            Enter the 4-digit OTP sent to {mobile} by SMS and WhatsApp.
           </p>
           <label className="mt-4 grid gap-2 text-sm text-[var(--muted)]">
             OTP code

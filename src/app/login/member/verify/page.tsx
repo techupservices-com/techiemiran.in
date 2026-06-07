@@ -10,18 +10,18 @@ function getOtpChannelCopy(deliveryChannel?: string, identifierType?: string) {
     };
   }
 
-  if (deliveryChannel === "sms") {
+  if (deliveryChannel === "mobile") {
     return {
-      intro: "Enter the SMS verification code to continue securely into your member account.",
-      security: "Use the exact 4-digit code received on your registered mobile number by SMS.",
-      helper: "We have sent a 4-digit verification code to your mobile number by SMS.",
+      intro: "Enter the verification code to continue securely into your member account.",
+      security: "Use the exact 4-digit code received on your registered mobile number by SMS and WhatsApp.",
+      helper: "We have sent a 4-digit verification code to your mobile number by SMS and WhatsApp.",
     };
   }
 
   return {
-    intro: "Enter the WhatsApp verification code to continue securely into your member account.",
-    security: "Use the exact 4-digit code received on WhatsApp for your registered mobile number.",
-    helper: "We have sent a 4-digit verification code to your mobile number on WhatsApp.",
+    intro: "Enter the verification code to continue securely into your member account.",
+    security: "Use the exact 4-digit code received for this login.",
+    helper: "We have sent a 4-digit verification code for this login.",
   };
 }
 

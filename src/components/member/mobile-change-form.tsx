@@ -14,7 +14,7 @@ export function MobileChangeForm() {
       requestEndpoint="/api/member/mobile/request-change"
       verifyEndpoint="/api/member/mobile/verify-change"
       verifyButtonLabel="Verify mobile"
-      requestPayloadBuilder={(mobile, deliveryChannel) => ({ newMobile: mobile, deliveryChannel })}
+      requestPayloadBuilder={(mobile) => ({ newMobile: mobile })}
       onVerified={() => router.refresh()}
     />
   );

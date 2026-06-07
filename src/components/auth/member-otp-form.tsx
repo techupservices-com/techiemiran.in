@@ -24,7 +24,7 @@ export function MemberOtpForm() {
   const [email, setEmail] = useState(searchParams.get("email") ?? "");
   const identifier = searchParams.get("identifier") ?? "";
   const identifierType = searchParams.get("identifierType") ?? "mobile";
-  const deliveryChannel = searchParams.get("deliveryChannel") ?? "whatsapp";
+  const deliveryChannel = searchParams.get("deliveryChannel") ?? "mobile";
 
   useEffect(() => {
     if (secondsLeft <= 0) return;
@@ -89,7 +89,7 @@ export function MemberOtpForm() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <span className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">
-              Sending {deliveryChannel === "email" ? "EMAIL" : deliveryChannel === "sms" ? "SMS" : "WHATSAPP"} OTP to
+              Sending {deliveryChannel === "email" ? "EMAIL" : "SMS + WHATSAPP"} OTP to
             </span>
             <p className="mt-2 text-lg font-semibold">
               {getDestinationLabel(identifierType, mobile, email, identifier)}

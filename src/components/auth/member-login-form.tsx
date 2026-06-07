@@ -11,13 +11,11 @@ function detectIdentifierType(value: string) {
 export function MemberLoginForm({ initialIdentifier = "" }: { initialIdentifier?: string }) {
   const router = useRouter();
   const [identifier, setIdentifier] = useState(initialIdentifier);
-  const [receiveWhatsapp, setReceiveWhatsapp] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const identifierType = useMemo(() => detectIdentifierType(identifier), [identifier]);
-  const deliveryChannel =
-    identifierType === "email" ? "email" : receiveWhatsapp ? "whatsapp" : "sms";
+  const deliveryChannel = identifierType === "email" ? "email" : "mobile";
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -70,24 +68,9 @@ export function MemberLoginForm({ initialIdentifier = "" }: { initialIdentifier?
       </div>
 
       <div className="rounded-[22px] border border-[var(--border)] bg-white px-4 py-4 text-sm text-[var(--muted)]">
-        {identifierType === "mobile" ? (
-          <label className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              checked={receiveWhatsapp}
-              onChange={(event) => setReceiveWhatsapp(event.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-[var(--border)] text-[#3c589e]"
-            />
-            <span>
-              Receive OTP on WhatsApp
-              <span className="mt-1 block text-xs text-[var(--muted)]">
-                Uncheck this option to receive your OTP by SMS instead.
-              </span>
-            </span>
-          </label>
-        ) : (
-          <p>Email login sends the OTP directly to your email inbox.</p>
-        )}
+        {identifierType === "mobile"
+          ? "A 4-digit OTP will be sent to your mobile number by both SMS and WhatsApp."
+          : "A 4-digit OTP will be sent directly to your email inbox."}
       </div>
 
       {error ? <p className="text-sm text-red-600 font-semibold">{error}</p> : null}
@@ -100,14 +83,10 @@ export function MemberLoginForm({ initialIdentifier = "" }: { initialIdentifier?
         {isLoading
           ? deliveryChannel === "email"
             ? "Sending email OTP..."
-            : deliveryChannel === "sms"
-              ? "Sending SMS OTP..."
-              : "Sending WhatsApp OTP..."
+            : "Sending OTP..."
           : deliveryChannel === "email"
             ? "Send Email OTP"
-            : deliveryChannel === "sms"
-              ? "Send SMS OTP"
-              : "Send WhatsApp OTP"}
+            : "Send OTP"}
       </button>
     </form>
   );

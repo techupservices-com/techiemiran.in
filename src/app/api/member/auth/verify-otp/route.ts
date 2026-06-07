@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     profileId: z.string().min(1),
     otp: z.string().length(4),
     identifierType: z.enum(["mobile", "email"]),
-    deliveryChannel: z.enum(["sms", "whatsapp", "email"]),
+    deliveryChannel: z.enum(["mobile", "email"]),
   });
   const body = schema.parse(await request.json());
   const result = await verifyOtp(body.profileId, "login", body.otp);

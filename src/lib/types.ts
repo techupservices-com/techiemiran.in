@@ -7,7 +7,7 @@ export type VerificationPurpose =
   | "email_verify";
 
 export type IdentifierType = "mobile" | "email";
-export type OtpDeliveryChannel = "sms" | "whatsapp" | "email";
+export type OtpDeliveryChannel = "mobile" | "sms" | "whatsapp" | "email";
 
 export type VerificationState = "pending" | "verified" | "attention";
 

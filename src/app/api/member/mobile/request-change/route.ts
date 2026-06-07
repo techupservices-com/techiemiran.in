@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   const session = await getMemberSession();
   if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const schema = z.object({ newMobile: z.string().min(10), deliveryChannel: z.enum(["sms", "whatsapp"]).default("whatsapp") });
+  const schema = z.object({ newMobile: z.string().min(10) });
   const body = schema.parse(await request.json());
   const member = await getMemberById(session.subject);
   if (!member) return Response.json({ error: "Member not found." }, { status: 404 });
@@ -28,19 +28,19 @@ export async function POST(request: Request) {
     normalizeMobile(body.newMobile),
     "mobile_change",
     "mobile",
-    body.deliveryChannel,
+    "mobile",
     requestRecord.id,
   );
-  const delivery =
-    body.deliveryChannel === "sms"
-      ? await sendSmsOtp({ mobile: normalizeMobile(body.newMobile), otp: code })
-      : await sendOtpMessage({
-          mobile: normalizeMobile(body.newMobile),
-          otp: code,
-          memberName: member.fullName,
-          purpose: "mobile_change",
-          clientReference: requestRecord.id,
-        });
+  const delivery = await Promise.all([
+    sendSmsOtp({ mobile: normalizeMobile(body.newMobile), otp: code }),
+    sendOtpMessage({
+      mobile: normalizeMobile(body.newMobile),
+      otp: code,
+      memberName: member.fullName,
+      purpose: "mobile_change",
+      clientReference: requestRecord.id,
+    }),
+  ]).then(([smsDelivery, whatsappDelivery]) => ({ ...smsDelivery, previewCode: (whatsappDelivery as { previewCode?: string }).previewCode }));
 
   return Response.json({
     requestId: requestRecord.id,

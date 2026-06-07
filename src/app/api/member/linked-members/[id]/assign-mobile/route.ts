@@ -14,7 +14,7 @@ export async function POST(request: Request, context: RouteContext<"/api/member/
   const member = await getMemberById(id);
   if (!member) return Response.json({ error: "Linked member not found." }, { status: 404 });
 
-  const schema = z.object({ newMobile: z.string().min(10), deliveryChannel: z.enum(["sms", "whatsapp"]).default("whatsapp") });
+  const schema = z.object({ newMobile: z.string().min(10) });
   const body = schema.parse(await request.json());
   const normalized = normalizeMobile(body.newMobile);
   const requestRecord = await createMobileChangeRequest({
@@ -30,19 +30,19 @@ export async function POST(request: Request, context: RouteContext<"/api/member/
     normalized,
     "linked_member_mobile_change",
     "mobile",
-    body.deliveryChannel,
+    "mobile",
     requestRecord.id,
   );
-  const delivery =
-    body.deliveryChannel === "sms"
-      ? await sendSmsOtp({ mobile: normalized, otp: code })
-      : await sendOtpMessage({
-          mobile: normalized,
-          otp: code,
-          memberName: member.fullName,
-          purpose: "linked_member_mobile_change",
-          clientReference: requestRecord.id,
-        });
+  const delivery = await Promise.all([
+    sendSmsOtp({ mobile: normalized, otp: code }),
+    sendOtpMessage({
+      mobile: normalized,
+      otp: code,
+      memberName: member.fullName,
+      purpose: "linked_member_mobile_change",
+      clientReference: requestRecord.id,
+    }),
+  ]).then(([smsDelivery, whatsappDelivery]) => ({ ...smsDelivery, previewCode: (whatsappDelivery as { previewCode?: string }).previewCode }));
 
   return Response.json({
     message: `Verification message sent for ${member.fullName}.`,

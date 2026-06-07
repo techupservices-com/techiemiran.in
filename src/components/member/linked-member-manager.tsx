@@ -48,7 +48,7 @@ export function LinkedMemberManager({ members }: { members: MemberWithVerificati
                 requestEndpoint={`/api/member/linked-members/${member.id}/assign-mobile`}
                 verifyEndpoint="/api/member/linked-members/verify-mobile"
                 verifyButtonLabel="Verify member OTP"
-                requestPayloadBuilder={(mobile, deliveryChannel) => ({ newMobile: mobile, deliveryChannel })}
+                requestPayloadBuilder={(mobile) => ({ newMobile: mobile })}
                 onVerified={() => router.refresh()}
               />
             </div>

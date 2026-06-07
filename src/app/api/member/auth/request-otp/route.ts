@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   const schema = z.object({
     identifier: z.string().min(3),
     identifierType: z.enum(["mobile", "email"]),
-    deliveryChannel: z.enum(["sms", "whatsapp", "email"]),
+    deliveryChannel: z.enum(["mobile", "email"]),
   });
   const body = schema.parse(await request.json());
 
@@ -44,21 +44,22 @@ export async function POST(request: Request) {
     destination,
     "login",
     body.identifierType,
-    body.deliveryChannel,
+      body.deliveryChannel,
   );
   try {
     const delivery =
-      body.deliveryChannel === "whatsapp"
-        ? await sendOtpMessage({
-            mobile: member.currentMobile,
-            otp: code,
-            memberName: member.fullName,
-            purpose: "login",
-            clientReference: record.id,
-          })
-        : body.deliveryChannel === "sms"
-          ? await sendSmsOtp({ mobile: member.currentMobile, otp: code })
-          : await sendEmailOtp({ email: member.email, otp: code, memberName: member.fullName });
+      body.deliveryChannel === "mobile"
+        ? await Promise.all([
+            sendSmsOtp({ mobile: member.currentMobile, otp: code }),
+            sendOtpMessage({
+              mobile: member.currentMobile,
+              otp: code,
+              memberName: member.fullName,
+              purpose: "login",
+              clientReference: record.id,
+            }),
+          ]).then(([smsDelivery, whatsappDelivery]) => ({ ...smsDelivery, previewCode: (whatsappDelivery as { previewCode?: string }).previewCode }))
+        : await sendEmailOtp({ email: member.email, otp: code, memberName: member.fullName });
 
     return Response.json({
       profileId: member.id,
