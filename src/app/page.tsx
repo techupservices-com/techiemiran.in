@@ -59,11 +59,7 @@ export default function Home() {
                     </li>
                     <li className="flex items-start gap-3">
                       <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#3c589e]" />
-                      <span>Latest Photograph</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#3c589e]" />
-                      <span>Identity Document Details / eKYC Verification</span>
+                      <span>Latest Selfie Photograph</span>
                     </li>
                   </ul>
                 </div>
@@ -113,7 +109,7 @@ export default function Home() {
               <section className="soft-card rounded-[30px] border-white/70 bg-white/88 p-6 md:p-8">
                 <p className="font-mono text-xs uppercase tracking-[0.3em] text-[#3c589e]">Request OTP</p>
                 <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em]">Access your account</h2>
-                <p className="mt-3 text-sm leading-6 text-[var(--muted)]">Use your existing club membership details. In demo mode, the OTP appears on the next screen if live API keys are not configured.</p>
+                <p className="mt-3 text-sm leading-6 text-[var(--muted)]">Enter your registered mobile number or email address to receive your OTP and continue with the verification process.</p>
                 <div className="mt-6">
                   <MemberLoginForm />
                 </div>
