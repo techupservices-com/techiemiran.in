@@ -18,10 +18,12 @@ export function MemberVerificationWizard({
   member,
   linkedMembers,
   requiresLinkedMemberCleanup,
+  selfieItem,
 }: {
   member: MemberWithVerification;
   linkedMembers: MemberWithVerification[];
   requiresLinkedMemberCleanup: boolean;
+  selfieItem: { id: string; fileName: string; previewUrl: string | null } | null;
 }) {
   const steps = useMemo(
     () =>
@@ -45,7 +47,7 @@ export function MemberVerificationWizard({
           title: "Selfie upload / replace",
           description: "Upload or replace your selfie to complete this verification step.",
           done: member.verification.selfieUploaded,
-          render: <UploadForm />,
+          render: <UploadForm selfie={selfieItem} />,
         },
         ...(requiresLinkedMemberCleanup
           ? [
@@ -66,6 +68,7 @@ export function MemberVerificationWizard({
       member.verification.mobileVerified,
       member.verification.selfieUploaded,
       requiresLinkedMemberCleanup,
+      selfieItem,
     ],
   );
 

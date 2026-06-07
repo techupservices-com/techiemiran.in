@@ -13,6 +13,14 @@ export default async function MemberDashboardPage() {
   const linkedMembers = await getLinkedMembers(member.id);
   const documents = await listDocuments(member.id);
   const profilePhotoUrl = await getMemberProfilePhotoUrl(member.id, member.photoUrl);
+  const selfieDocument = documents.find((document) => document.documentGroup === "selfie") ?? null;
+  const selfieItem = profilePhotoUrl
+    ? {
+        id: selfieDocument?.id ?? "profile-photo",
+        fileName: selfieDocument?.fileName ?? "Current selfie",
+        previewUrl: profilePhotoUrl,
+      }
+    : null;
   const requiresLinkedMemberCleanup =
     linkedMembers.length > 1 && linkedMembers.some((entry) => !entry.mobileVerified);
   const mobileOwner = await isMobileLoginOwner(member.id, member.currentMobile);
@@ -75,6 +83,7 @@ export default async function MemberDashboardPage() {
         member={member}
         linkedMembers={linkedMembers}
         requiresLinkedMemberCleanup={requiresLinkedMemberCleanup}
+        selfieItem={selfieItem}
       />
 
     </>
