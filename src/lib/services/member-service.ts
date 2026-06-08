@@ -160,6 +160,24 @@ export async function getMemberById(id: string) {
   } satisfies MemberWithVerification;
 }
 
+export async function getMemberByIdBasic(id: string) {
+  const client = getRequiredSupabaseClient();
+  const { data, error } = await client.from("profiles").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return mapProfile(data as ProfileRow);
+}
+
+export async function getMembersByIdsBasic(profileIds: string[]) {
+  if (!profileIds.length) return [];
+  const client = getRequiredSupabaseClient();
+  const { data, error } = await client.from("profiles").select("*").in("id", profileIds);
+  if (error) throw error;
+  const rows = (data ?? []) as ProfileRow[];
+  const order = new Map(profileIds.map((id, index) => [id, index]));
+  return rows.map(mapProfile).sort((left, right) => (order.get(left.id) ?? 0) - (order.get(right.id) ?? 0));
+}
+
 export async function findMemberByMobile(mobile: string) {
   const client = getRequiredSupabaseClient();
   const { data, error } = await client
