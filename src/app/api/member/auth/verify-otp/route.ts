@@ -20,6 +20,7 @@ export async function POST(request: Request) {
 
   await updateMember(body.profileId, {
     ...(body.identifierType === "mobile" ? { mobileVerified: true } : {}),
+    ...(body.identifierType === "email" ? { emailVerified: true } : {}),
   });
 
   if (body.identifierType === "mobile") {

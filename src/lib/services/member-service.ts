@@ -23,6 +23,29 @@ async function getProfilesAndDocuments() {
   return { profiles, documents, otpRequests };
 }
 
+async function getProfilesAndDocumentsByIds(profileIds: string[]) {
+  if (!profileIds.length) {
+    return { profiles: [] as ProfileRow[], documents: [] as DocumentRow[], otpRequests: [] as OtpRequestRow[] };
+  }
+
+  const client = getRequiredSupabaseClient();
+  const [profilesRes, documentsRes, otpRes] = await Promise.all([
+    client.from("profiles").select("*").in("id", profileIds),
+    client.from("member_documents").select("*").in("profile_id", profileIds),
+    client.from("audit_logs").select("target_profile_id,action").in("target_profile_id", profileIds),
+  ]);
+
+  if (profilesRes.error) throw profilesRes.error;
+  if (documentsRes.error) throw documentsRes.error;
+  if (otpRes.error) throw otpRes.error;
+
+  return {
+    profiles: (profilesRes.data ?? []) as ProfileRow[],
+    documents: (documentsRes.data ?? []) as DocumentRow[],
+    otpRequests: (otpRes.data ?? []) as OtpRequestRow[],
+  };
+}
+
 async function buildMembersWithVerification(
   profiles: ProfileRow[],
   documents: DocumentRow[],
@@ -69,6 +92,7 @@ async function buildMembersWithVerification(
 function toProfileUpdates(updates: Partial<MemberProfile>) {
   return {
     ...(updates.email !== undefined ? { email: updates.email } : {}),
+    ...(updates.emailVerified !== undefined ? { email_verified: updates.emailVerified } : {}),
     ...(updates.currentMobile !== undefined ? { current_mobile: normalizeMobile(updates.currentMobile) } : {}),
     ...(updates.mobileVerified !== undefined ? { mobile_verified: updates.mobileVerified } : {}),
     ...(updates.address1 !== undefined ? { address1: updates.address1 } : {}),
@@ -86,9 +110,54 @@ export async function listMembersWithVerification() {
   return buildMembersWithVerification(result.profiles, result.documents, result.otpRequests);
 }
 
+export async function getMembersByIdsWithVerification(profileIds: string[]) {
+  const result = await getProfilesAndDocumentsByIds(profileIds);
+  const members = await buildMembersWithVerification(result.profiles, result.documents, result.otpRequests);
+  const order = new Map(profileIds.map((id, index) => [id, index]));
+  return members.sort((left, right) => (order.get(left.id) ?? 0) - (order.get(right.id) ?? 0));
+}
+
 export async function getMemberById(id: string) {
-  const members = await listMembersWithVerification();
-  return members.find((member) => member.id === id) ?? null;
+  const client = getRequiredSupabaseClient();
+  const [profileRes, documentsRes, auditRes] = await Promise.all([
+    client.from("profiles").select("*").eq("id", id).maybeSingle(),
+    client.from("member_documents").select("*").eq("profile_id", id),
+    client.from("audit_logs").select("target_profile_id,action").eq("target_profile_id", id),
+  ]);
+
+  if (profileRes.error) throw profileRes.error;
+  if (documentsRes.error) throw documentsRes.error;
+  if (auditRes.error) throw auditRes.error;
+  if (!profileRes.data) return null;
+
+  const row = profileRes.data as ProfileRow;
+  const profile = mapProfile(row);
+  const memberDocuments = ((documentsRes.data ?? []) as DocumentRow[]).map((document) => ({
+    id: document.id,
+    profileId: document.profile_id,
+    documentType: document.document_type,
+    documentGroup: document.document_group ?? "legacy",
+    documentPart: document.document_part ?? "legacy",
+    fileName: document.file_name,
+    filePath: document.file_path,
+    mimeType: document.mime_type ?? "application/octet-stream",
+    uploadedAt: document.uploaded_at,
+    documentNumber: document.document_number ?? null,
+  }));
+  const linkedRes = await client
+    .from("profiles")
+    .select("id")
+    .eq("current_mobile", row.current_mobile ?? "");
+  if (linkedRes.error) throw linkedRes.error;
+  const linkedMemberCount = (linkedRes.data ?? []).length;
+  const resolvedPhotoUrl = await getMemberProfilePhotoUrl(row.id, row.photo_url ?? undefined);
+
+  return {
+    ...profile,
+    photoUrl: resolvedPhotoUrl ?? undefined,
+    linkedMemberCount,
+    verification: computeVerification(profile, memberDocuments),
+  } satisfies MemberWithVerification;
 }
 
 export async function findMemberByMobile(mobile: string) {

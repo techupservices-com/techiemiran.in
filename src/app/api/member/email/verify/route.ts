@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { getMemberSession } from "@/lib/auth";
-import { addAuditLog, findVerifiedEmailOwner, getMemberById } from "@/lib/data";
+import { addAuditLog, findVerifiedEmailOwner, getMemberById, updateMember } from "@/lib/data";
 import { verifyOtp } from "@/lib/otp-store";
 
 export async function POST(request: Request) {
@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     );
   }
 
+  await updateMember(session.subject, { emailVerified: true });
   await addAuditLog({ actorType: "member", actorId: session.subject, action: "Verified email via OTP", targetProfileId: session.subject, metadata: { scope: "email-otp" } });
   return Response.json({ message: "Email address verified successfully." });
 }

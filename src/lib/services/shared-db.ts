@@ -106,7 +106,7 @@ export function mapProfile(row: ProfileRow): MemberProfile {
     memberType: row.member_type ?? "",
     status: row.status ?? "",
     email: row.email ?? "",
-    emailVerified: false,
+    emailVerified: Boolean(row.email_verified),
     currentMobile: row.current_mobile ?? "",
     mobileVerified: Boolean(row.mobile_verified),
     dateOfBirth: row.date_of_birth ?? "1970-01-01",

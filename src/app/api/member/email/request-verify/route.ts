@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     );
   }
 
-  await updateMember(member.id, { email: body.email });
+  await updateMember(member.id, { email: body.email, emailVerified: false });
   const { record, code } = await createOtp(member.id, body.email, "email_verify", "email", "email");
   await sendEmailOtp({ email: body.email, otp: code, memberName: member.fullName });
   await addAuditLog({ actorType: "member", actorId: member.id, action: "Requested email verification OTP", targetProfileId: member.id, metadata: { scope: "email-otp" } });
