@@ -10,6 +10,7 @@ interface RecentAuditItem {
   action: string;
   actorType: string;
   createdAt: string;
+  formattedCreatedAt: string;
   memberName: string;
   membershipId: string;
   mobile: string;
@@ -69,7 +70,7 @@ export function AdminRecentAuditPreview({ initialItems }: { initialItems: Recent
                 {entry.memberName} · {entry.membershipId} · {formatMobile(entry.mobile)}
               </p>
               <p className="mt-1 text-xs text-[var(--muted)]">
-                {entry.actorType} · {new Date(entry.createdAt).toLocaleString("en-IN")}
+                {entry.actorType} · {entry.formattedCreatedAt}
               </p>
             </div>
           ))

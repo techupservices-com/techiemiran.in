@@ -11,6 +11,7 @@ interface AuditHistoryItem {
   action: string;
   actorType: string;
   createdAt: string;
+  formattedCreatedAt: string;
   targetProfileId: string;
   memberName: string;
   membershipId: string;
@@ -65,7 +66,20 @@ export function AdminAuditHistory({
 
   return (
     <section className="soft-card rounded-[28px] p-6">
-      <h2 className="text-2xl font-semibold">Audit history</h2>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-semibold">Audit history</h2>
+        </div>
+        <button
+          type="button"
+          onClick={() => void refresh()}
+          disabled={isRefreshing}
+          className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb] disabled:opacity-60"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          {isRefreshing ? "Refreshing..." : "Refresh"}
+        </button>
+      </div>
       <div className="mt-6 grid gap-3">
         {currentTotal === 0 ? (
           <p className="text-sm text-[var(--muted)]">No edits recorded yet. Changes from member or admin forms will appear here.</p>
@@ -80,7 +94,7 @@ export function AdminAuditHistory({
                   </p>
                   <p className="mt-1 text-xs text-[var(--muted)]">{entry.actorType} · target {entry.targetProfileId}</p>
                 </div>
-                <p className="text-xs text-[var(--muted)]">{new Date(entry.createdAt).toLocaleString("en-IN")}</p>
+                <p className="text-xs text-[var(--muted)]">{entry.formattedCreatedAt}</p>
               </div>
             </div>
           ))
@@ -93,15 +107,6 @@ export function AdminAuditHistory({
             Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, currentTotal)} of {currentTotal} audit records
           </p>
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => void refresh()}
-              disabled={isRefreshing}
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb] disabled:opacity-60"
-            >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-              {isRefreshing ? "Refreshing..." : "Refresh"}
-            </button>
             <button disabled={currentPage === 1} onClick={() => goToPage(Math.max(1, currentPage - 1))} className="rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm text-[var(--foreground)] disabled:opacity-50">Previous</button>
             <button disabled={currentPage === pageCount} onClick={() => goToPage(Math.min(pageCount, currentPage + 1))} className="rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm text-[var(--foreground)] disabled:opacity-50">Next</button>
           </div>
