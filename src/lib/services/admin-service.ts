@@ -291,3 +291,22 @@ export async function getMemberPreviewData(limit: number) {
     })),
   };
 }
+
+export async function getAdminHomepageData() {
+  const [overview, memberPreview, recentAudit] = await Promise.all([
+    getAdminOverviewSummary(),
+    getMemberPreviewData(4),
+    getRecentAuditPreviewData(4),
+  ]);
+
+  return {
+    counts: {
+      totalMembers: overview.totalMembers,
+      verified: overview.verified,
+      sharedMobileGroups: overview.sharedMobileGroups,
+      needsAction: overview.needsAction,
+    },
+    members: memberPreview.members,
+    recentAuditItems: recentAudit.items,
+  };
+}
