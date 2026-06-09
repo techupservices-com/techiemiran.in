@@ -101,7 +101,7 @@ export function AdminHomeLive({ initialData }: { initialData: AdminHomepageData 
               <h2 className="text-2xl font-semibold">Member directory</h2>
               <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Use the directory to search members, review verification progress, open full details, or correct profile information.</p>
             </div>
-            <Link href="/admin/members" className="rounded-full bg-[#3c589e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2f467e]">View all</Link>
+            <Link href="/admin/members" className="whitespace-nowrap rounded-full bg-[#3c589e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2f467e]">View all</Link>
           </div>
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             {data.members.map((member) => (
@@ -124,7 +124,7 @@ export function AdminHomeLive({ initialData }: { initialData: AdminHomepageData 
               <p className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">Recent activity</p>
               <h2 className="mt-2 text-2xl font-semibold">Recent audit events</h2>
             </div>
-            <Link href="/admin/audit" className="rounded-full bg-[#3c589e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2f467e]">View all</Link>
+            <Link href="/admin/audit" className="whitespace-nowrap rounded-full bg-[#3c589e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2f467e]">View all</Link>
           </div>
           <div className="mt-6 space-y-3">
             {data.recentAuditItems.length === 0 ? (

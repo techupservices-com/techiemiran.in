@@ -1,7 +1,7 @@
 import { listAuditLogs } from "@/lib/services/audit-service";
 import { getMembersByIdsBasic, getMembersByIdsWithVerification, listMembersWithVerification } from "@/lib/services/member-service";
 import type { MemberWithVerification } from "@/lib/types";
-import { fetchAllRows, type MemberVerificationSummaryRow } from "@/lib/services/shared-db";
+import { fetchAllRows, getRequiredSupabaseClient, type MemberVerificationSummaryRow } from "@/lib/services/shared-db";
 
 const IST_DATE_TIME_FORMATTER = new Intl.DateTimeFormat("en-IN", {
   dateStyle: "short",
@@ -266,23 +266,13 @@ export async function getAdminOverviewSummary() {
 }
 
 export async function getMemberPreviewData(limit: number) {
-  const summary = await listVerificationSummary();
-  if (summary) {
-    const members = await getMembersByIdsWithVerification(summary.slice(0, limit).map((row) => row.profile_id));
-    return {
-      members: members.map((member) => ({
-        id: member.id,
-        fullName: member.fullName,
-        membershipId: member.membershipId,
-        currentMobile: member.currentMobile,
-        photoUrl: member.photoUrl,
-      })),
-    };
-  }
-
-  const members = await listMembersWithVerification();
+  const client = getRequiredSupabaseClient();
+  const idsRes = await client.from("profiles").select("id").order("updated_at", { ascending: false }).limit(limit);
+  if (idsRes.error) throw idsRes.error;
+  const ids = (idsRes.data ?? []).map((row) => row.id as string);
+  const sorted = await getMembersByIdsWithVerification(ids);
   return {
-    members: members.slice(0, limit).map((member) => ({
+    members: sorted.slice(0, limit).map((member) => ({
       id: member.id,
       fullName: member.fullName,
       membershipId: member.membershipId,
