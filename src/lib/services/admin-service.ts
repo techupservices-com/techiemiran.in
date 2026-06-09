@@ -1,7 +1,7 @@
 import { listAuditLogs } from "@/lib/services/audit-service";
 import { getMembersByIdsBasic } from "@/lib/services/member-service";
 import type { MemberWithVerification } from "@/lib/types";
-import { fetchAllRows, getRequiredSupabaseClient, type MemberVerificationSnapshotRow } from "@/lib/services/shared-db";
+import { getRequiredSupabaseClient, type MemberVerificationSnapshotRow } from "@/lib/services/shared-db";
 
 type FilterKey = "verified" | "pending" | "shared";
 
@@ -11,82 +11,15 @@ const IST_DATE_TIME_FORMATTER = new Intl.DateTimeFormat("en-IN", {
   timeZone: "Asia/Kolkata",
 });
 
+function buildPublicSelfieUrl(filePath?: string | null) {
+  if (!filePath) return undefined;
+  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!baseUrl) return undefined;
+  return `${baseUrl}/storage/v1/object/public/member-selfies/${filePath}`;
+}
+
 function formatAuditTimestampToIST(value: string) {
   return IST_DATE_TIME_FORMATTER.format(new Date(value));
-}
-
-async function listVerificationSummary() {
-  return fetchAllRows<MemberVerificationSnapshotRow>("member_verification_snapshot", "*", "full_name");
-}
-
-function matchesSummaryFilters(
-  row: MemberVerificationSnapshotRow,
-  query: string,
-  filters: Array<"verified" | "pending" | "shared">,
-) {
-  const value = query.trim().toLowerCase();
-  const matchesQuery =
-    !value || [row.full_name, row.membership_id, row.current_mobile ?? "", row.email ?? ""].join(" ").toLowerCase().includes(value);
-
-  const matchesFilter =
-    filters.length === 0 ||
-    filters.every((filter) => {
-      if (filter === "verified") return row.completed;
-      if (filter === "pending") return !row.completed;
-      if (filter === "shared") return row.shared_mobile_count > 1;
-      return true;
-    });
-
-  return matchesQuery && matchesFilter;
-}
-
-function sortSummary(rows: MemberVerificationSnapshotRow[], sort: string) {
-  const copy = [...rows];
-  copy.sort((left, right) => {
-    const leftName = left.full_name ?? "";
-    const rightName = right.full_name ?? "";
-    const leftMembership = left.membership_id ?? "";
-    const rightMembership = right.membership_id ?? "";
-    switch (sort) {
-      case "name_desc":
-        return rightName.localeCompare(leftName);
-      case "membership_asc":
-        return leftMembership.localeCompare(rightMembership);
-      case "membership_desc":
-        return rightMembership.localeCompare(leftMembership);
-      case "updated_desc":
-        return (Date.parse(right.updated_at) || 0) - (Date.parse(left.updated_at) || 0);
-      case "name_asc":
-      default:
-        return leftName.localeCompare(rightName);
-    }
-  });
-  return copy;
-}
-
-function matchesMemberFilters(
-  member: MemberWithVerification,
-  query: string,
-  filters: Array<"verified" | "pending" | "shared">,
-) {
-  const value = query.trim().toLowerCase();
-  const matchesQuery =
-    !value || [member.fullName, member.membershipId, member.currentMobile, member.email].join(" ").toLowerCase().includes(value);
-
-  const matchesFilter =
-    filters.length === 0 ||
-    filters.every((filter) => {
-      if (filter === "verified") return member.verification.completed;
-      if (filter === "pending") return !member.verification.completed;
-      if (filter === "shared") return member.linkedMemberCount > 1;
-      return true;
-    });
-
-  return matchesQuery && matchesFilter;
-}
-
-function sortMembers(members: MemberWithVerification[], sort: string) {
-  return members;
 }
 
 function applySummaryQueryFilters<T>(queryBuilder: T, query: string, filters: FilterKey[]) {
@@ -332,15 +265,10 @@ export async function getMemberPreviewData(limit: number) {
     if (idsRes.error) throw idsRes.error;
     const ids = (idsRes.data ?? []).map((row) => row.id as string);
     const sorted = await getMembersByIdsBasic(ids);
-    const withPhotos = await Promise.all(
-      sorted.slice(0, limit).map(async (member) => ({
-        ...member,
-        photoUrl:
-          member.photoUrl && !member.photoUrl.startsWith("http")
-            ? (await createSignedStorageUrl(SELFIE_BUCKET, member.photoUrl)) ?? undefined
-            : member.photoUrl,
-      })),
-    );
+    const withPhotos = sorted.slice(0, limit).map((member) => ({
+      ...member,
+      photoUrl: member.photoUrl?.startsWith("http") ? member.photoUrl : buildPublicSelfieUrl(member.photoUrl),
+    }));
     return {
       members: withPhotos.map((member) => ({
         id: member.id,
