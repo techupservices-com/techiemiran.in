@@ -204,6 +204,27 @@ export async function findMemberByEmail(email: string) {
   return mapProfile(data as ProfileRow);
 }
 
+export async function getProfilesByMobileForAuth(mobile: string) {
+  const normalized = normalizeMobile(mobile);
+  if (!normalized) return [];
+  const client = getRequiredSupabaseClient();
+  const { data, error } = await client
+    .from("profiles")
+    .select("*")
+    .eq("current_mobile", normalized)
+    .order("membership_id", { ascending: true });
+  if (error) throw error;
+  return ((data ?? []) as ProfileRow[]).map(mapProfile);
+}
+
+export async function getMemberByEmailForAuth(email: string) {
+  return findMemberByEmail(email);
+}
+
+export async function getMemberByIdForAuth(profileId: string) {
+  return getMemberByIdBasic(profileId);
+}
+
 export async function findVerifiedMobileOwner(mobile: string, excludeProfileId?: string) {
   const normalized = normalizeMobile(mobile);
   if (!normalized) return null;

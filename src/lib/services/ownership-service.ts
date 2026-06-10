@@ -2,7 +2,7 @@ import type { MemberWithVerification } from "@/lib/types";
 import { normalizeMobile } from "@/lib/utils";
 import { addAuditLog } from "@/lib/services/audit-service";
 import { getRequiredSupabaseClient, type MobileLoginOwnerRow } from "@/lib/services/shared-db";
-import { getMemberById, getMembersByIdsWithVerification } from "@/lib/services/member-service";
+import { getMemberByIdForAuth, getMembersByIdsWithVerification, getProfilesByMobileForAuth } from "@/lib/services/member-service";
 
 function getVerificationScore(member: MemberWithVerification) {
   let score = 0;
@@ -61,13 +61,34 @@ export async function ensureMobileLoginOwner(mobile: string) {
   if (!normalized) return null;
   const existing = await getMobileLoginOwner(normalized);
   if (existing?.profileId) {
-    const owner = await getMemberById(existing.profileId);
+    const owner = await getMemberByIdForAuth(existing.profileId);
     if (owner && normalizeMobile(owner.currentMobile) === normalized) return owner;
   }
   const candidates = await listProfilesByMobile(normalized);
   if (!candidates.length) return null;
   const owner = chooseBestMobileOwner(candidates);
   if (!owner) return null;
+  await setMobileLoginOwner(normalized, owner.id);
+  return owner;
+}
+
+export async function ensureMobileLoginOwnerFast(mobile: string, candidates?: MemberWithVerification[]) {
+  const normalized = normalizeMobile(mobile);
+  if (!normalized) return null;
+  const existing = await getMobileLoginOwner(normalized);
+  if (existing?.profileId) {
+    const owner = await getMemberByIdForAuth(existing.profileId);
+    if (owner && normalizeMobile(owner.currentMobile) === normalized) return owner;
+  }
+  const profiles = candidates && candidates.length ? candidates : (await getProfilesByMobileForAuth(normalized)) as unknown as MemberWithVerification[];
+  if (!profiles.length) return null;
+  const owner = [...profiles].sort((left, right) => {
+    const score = Number(Boolean((right as { mobileVerified?: boolean }).mobileVerified)) - Number(Boolean((left as { mobileVerified?: boolean }).mobileVerified));
+    if (score !== 0) return score;
+    const emailScore = Number(Boolean((right as { emailVerified?: boolean }).emailVerified)) - Number(Boolean((left as { emailVerified?: boolean }).emailVerified));
+    if (emailScore !== 0) return emailScore;
+    return left.membershipId.localeCompare(right.membershipId);
+  })[0];
   await setMobileLoginOwner(normalized, owner.id);
   return owner;
 }

@@ -1,11 +1,10 @@
 import { z } from "zod";
-import { ensureMobileLoginOwner, findMemberByEmail } from "@/lib/data";
+import { ensureMobileLoginOwnerFast, findMemberByEmail, getProfilesByMobileForAuth } from "@/lib/data";
 import { sendEmailOtp } from "@/lib/email";
 import { createOtp } from "@/lib/otp-store";
 import { sendSmsOtp } from "@/lib/sms";
 import { sendOtpMessage } from "@/lib/techup";
 import { normalizeMobile } from "@/lib/utils";
-import { getRequiredSupabaseClient } from "@/lib/services/shared-db";
 
 export async function POST(request: Request) {
   const schema = z.object({
@@ -27,14 +26,12 @@ export async function POST(request: Request) {
   if (body.identifierType === "email") {
     member = await findMemberByEmail(body.identifier);
   } else {
-    const client = getRequiredSupabaseClient();
     const normalized = normalizeMobile(body.identifier);
-    const existsRes = await client.from("profiles").select("id", { count: "exact", head: true }).eq("current_mobile", normalized);
-    if (existsRes.error) throw existsRes.error;
-    if (!existsRes.count) {
+    const profiles = await getProfilesByMobileForAuth(normalized);
+    if (!profiles.length) {
       return Response.json({ error: "The entered mobile number is not present in our records. Please re-check your mobile number to continue, or contact the admin for more help." }, { status: 404 });
     }
-    member = await ensureMobileLoginOwner(body.identifier);
+    member = profiles.length === 1 ? profiles[0] : await ensureMobileLoginOwnerFast(normalized, profiles as never);
   }
 
   if (!member) {
