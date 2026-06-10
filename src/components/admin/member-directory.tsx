@@ -150,13 +150,13 @@ export function MemberDirectory({
           </button>
         </div>
 
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex-1">
+        <div className="grid gap-3">
+          <div>
             <p className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">Member directory</p>
             <label htmlFor="member-search" className="mb-2 block text-sm font-medium text-[var(--foreground)]">
               Search by member name, membership ID or mobile number
             </label>
-            <div className="flex flex-col gap-3 md:flex-row">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
               <input
                 id="member-search"
                 value={search}
@@ -165,24 +165,22 @@ export function MemberDirectory({
                   if (event.key === "Enter") updateParams({ q: search.trim(), page: 1 });
                 }}
                 placeholder="Search members"
-                className="w-full rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-[var(--foreground)]"
+                className="w-full flex-1 rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-[var(--foreground)]"
               />
               <button
                 onClick={() => updateParams({ q: search.trim(), page: 1 })}
-                className="rounded-2xl bg-[#3c589e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2f467e]"
+                className="h-12 rounded-2xl bg-[#3c589e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2f467e]"
               >
                 Search
               </button>
+              <div className="grid grid-cols-2 gap-3 lg:w-[260px]">
+                <button onClick={() => updateParams({ view: "grid" })} className={cn("h-12 rounded-2xl border px-4 py-3 text-sm font-medium", view === "grid" ? "border-[#6f84ba] bg-[#3c589e] text-white" : "border-[var(--border)] bg-white text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]")}>Grid</button>
+                <button onClick={() => updateParams({ view: "list" })} className={cn("h-12 rounded-2xl border px-4 py-3 text-sm font-medium", view === "list" ? "border-[#6f84ba] bg-[#3c589e] text-white" : "border-[var(--border)] bg-white text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]")}>List</button>
+              </div>
             </div>
             <p className="mt-2 text-xs text-[var(--muted)]">
               Combine filters to narrow the list, such as pending members with shared mobile numbers.
             </p>
-          </div>
-          <div className="flex flex-col gap-3 lg:items-end">
-            <div className="grid grid-cols-2 gap-3 md:w-[260px]">
-              <button onClick={() => updateParams({ view: "grid" })} className={cn("rounded-2xl border px-4 py-3 text-sm font-medium", view === "grid" ? "border-[#6f84ba] bg-[#3c589e] text-white" : "border-[var(--border)] bg-white text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]")}>Grid</button>
-              <button onClick={() => updateParams({ view: "list" })} className={cn("rounded-2xl border px-4 py-3 text-sm font-medium", view === "list" ? "border-[#6f84ba] bg-[#3c589e] text-white" : "border-[var(--border)] bg-white text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]")}>List</button>
-            </div>
           </div>
         </div>
       </div>
