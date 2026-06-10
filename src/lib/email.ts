@@ -1,5 +1,3 @@
-import nodemailer from "nodemailer";
-
 interface SendEmailOtpInput {
   email: string;
   otp: string;
@@ -16,51 +14,81 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string) {
 }
 
 export async function sendEmailOtp(input: SendEmailOtpInput) {
-  const host = process.env.SMTP_HOST ?? "smtp.hostinger.com";
-  const port = Number(process.env.SMTP_PORT ?? 465);
-  const user = process.env.SMTP_USER ?? "support@pclprofile.com";
-  const pass = process.env.SMTP_PASS;
-  const fromEmail = process.env.SMTP_FROM_EMAIL ?? "support@pclprofile.com";
-  const fromName = process.env.SMTP_FROM_NAME ?? "Poona Club";
+  const apiKey = process.env.RESEND_API_KEY;
+  const fromEmail = process.env.RESEND_FROM_EMAIL ?? "support@pclprofile.com";
+  const fromName = process.env.RESEND_FROM_NAME ?? "Poona Club";
 
-  if (!pass) {
-    throw new Error("SMTP password is missing.");
+  if (!apiKey) {
+    throw new Error("Resend API key is missing.");
   }
 
-  const transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure: true,
-    auth: { user, pass },
-  });
+  const payload = {
+    from: `${fromName} <${fromEmail}>`,
+    to: [input.email],
+    subject: "Your Poona Club verification code",
+    text: `Hello ${input.memberName}, your Poona Club verification code is ${input.otp}. It is valid for 10 minutes.`,
+    html: `<p>Hello ${input.memberName},</p><p>Your <strong>Poona Club</strong> verification code is <strong>${input.otp}</strong>.</p><p>It is valid for 10 minutes.</p>`,
+  };
+
+  let raw = "";
+  let status = 0;
 
   try {
-    await withTimeout(
-      transporter.sendMail({
-        from: `${fromName} <${fromEmail}>`,
-        to: input.email,
-        subject: "Your Poona Club verification code",
-        text: `Hello ${input.memberName}, your Poona Club verification code is ${input.otp}. It is valid for 10 minutes.`,
-        html: `<p>Hello ${input.memberName},</p><p>Your <strong>Poona Club</strong> verification code is <strong>${input.otp}</strong>.</p><p>It is valid for 10 minutes.</p>`,
+    const response = await withTimeout(
+      fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       }),
       6000,
-      "SMTP send",
+      "Resend email send",
     );
+
+    status = response.status;
+    raw = await response.text();
+
+    let parsed: { id?: string; message?: string } = {};
+    try {
+      parsed = raw ? (JSON.parse(raw) as { id?: string; message?: string }) : {};
+    } catch {
+      parsed = {};
+    }
+
+    if (!response.ok || !parsed.id) {
+      console.error(
+        JSON.stringify({
+          type: "member-email-otp-send-failed",
+          provider: "resend",
+          fromEmail,
+          to: input.email,
+          status,
+          response: raw || null,
+        }),
+      );
+      throw new Error("Unable to send email OTP. Please try again after some time.");
+    }
+
+    return {
+      provider: "resend",
+      accepted: true,
+      requestId: parsed.id,
+    };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown email delivery error";
     console.error(
       JSON.stringify({
         type: "member-email-otp-send-failed",
-        host,
-        port,
-        user,
+        provider: "resend",
         fromEmail,
         to: input.email,
+        status: status || null,
+        response: raw || null,
         error: message,
       }),
     );
     throw new Error("Unable to send email OTP. Please try again after some time.");
   }
-
-  return { provider: "email", accepted: true };
 }
