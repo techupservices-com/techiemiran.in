@@ -2,8 +2,7 @@ import { z } from "zod";
 import { ensureMobileLoginOwnerFast, findMemberByEmail, getProfilesByMobileForAuth } from "@/lib/data";
 import { sendEmailOtp } from "@/lib/email";
 import { createOtp } from "@/lib/otp-store";
-import { sendSmsOtp } from "@/lib/sms";
-import { sendOtpMessage } from "@/lib/techup";
+import { sendMobileOtpWithFallback } from "@/lib/services/otp-delivery-service";
 import { normalizeMobile } from "@/lib/utils";
 
 export async function POST(request: Request) {
@@ -52,21 +51,17 @@ export async function POST(request: Request) {
     destination,
     "login",
     body.identifierType,
-      body.deliveryChannel,
+    body.deliveryChannel,
   );
   try {
     const delivery =
       body.deliveryChannel === "mobile"
-        ? await Promise.all([
-            sendSmsOtp({ mobile: member.currentMobile, otp: code }),
-            sendOtpMessage({
-              mobile: member.currentMobile,
-              otp: code,
-              memberName: member.fullName,
-              purpose: "login",
-              clientReference: record.id,
-            }),
-          ]).then(([smsDelivery, whatsappDelivery]) => ({ ...smsDelivery, previewCode: (whatsappDelivery as { previewCode?: string }).previewCode }))
+        ? await sendMobileOtpWithFallback({
+            mobile: member.currentMobile,
+            otp: code,
+            memberName: member.fullName,
+            clientReference: record.id,
+          })
         : await sendEmailOtp({ email: member.email, otp: code, memberName: member.fullName });
 
     return Response.json({
