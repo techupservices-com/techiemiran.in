@@ -15,6 +15,7 @@ export default async function AdminAuditPage({
 
   return (
     <AdminAuditHistory
+      key={`${page}-${data.total}-${data.items.map((item) => item.id).join(",")}`}
       items={data.items}
       total={data.total}
       currentPage={page}

@@ -34,7 +34,7 @@ export function AdminAuditHistory({
   const [currentTotal, setCurrentTotal] = useState(total);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const pageCount = Math.max(1, Math.ceil(currentTotal / pageSize));
 
   const refresh = useCallback(async () => {
     if (isRefreshing) return;
@@ -56,7 +56,7 @@ export function AdminAuditHistory({
     }
   }, [currentPage, currentTotal, isRefreshing]);
 
-  useVisiblePolling(30000, refresh);
+  useVisiblePolling(60000, refresh);
 
   function goToPage(page: number) {
     const params = new URLSearchParams();
