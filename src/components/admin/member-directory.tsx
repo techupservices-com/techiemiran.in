@@ -95,8 +95,8 @@ export function MemberDirectory({
   }
 
   const filterOptions = [
-    { value: "verified" as const, label: "Verified", count: currentCounts.verified },
     { value: "inprogress" as const, label: "In Progress", count: currentCounts.inprogress },
+    { value: "verified" as const, label: "Verified", count: currentCounts.verified },
     { value: "pending" as const, label: "Pending", count: currentCounts.pending },
     { value: "shared" as const, label: "Shared mobile", count: currentCounts.shared },
   ];
@@ -104,40 +104,50 @@ export function MemberDirectory({
   return (
     <div className="grid gap-5">
       <div className="shell-panel rounded-[24px] p-4 md:p-5">
-        <div className="mb-4 flex flex-wrap gap-2">
-          <button
-            onClick={() => updateParams({ filters: [], page: 1 })}
-            className={cn(
-              "flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium",
-              filters.length === 0
-                ? "border-[#6f84ba] bg-[#3c589e] text-white"
-                : "border-[var(--border)] bg-white text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]",
-            )}
-          >
-            <span>All members</span>
-              <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", filters.length === 0 ? "bg-white/18 text-white" : "bg-[#eef2fb] text-[#3c589e]")}>{currentCounts.all}</span>
-            </button>
-
-          {filterOptions.map((option) => (
+        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap gap-2">
             <button
-              key={option.value}
-              onClick={() => {
-                const nextFilters = filters.includes(option.value)
-                  ? filters.filter((value) => value !== option.value)
-                  : [...filters, option.value];
-                updateParams({ filters: nextFilters, page: 1 });
-              }}
+              onClick={() => updateParams({ filters: [], page: 1 })}
               className={cn(
                 "flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium",
-                filters.includes(option.value)
+                filters.length === 0
                   ? "border-[#6f84ba] bg-[#3c589e] text-white"
                   : "border-[var(--border)] bg-white text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]",
               )}
             >
-              <span>{option.label}</span>
-              <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", filters.includes(option.value) ? "bg-white/18 text-white" : "bg-[#eef2fb] text-[#3c589e]")}>{option.count}</span>
+              <span>All members</span>
+              <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", filters.length === 0 ? "bg-white/18 text-white" : "bg-[#eef2fb] text-[#3c589e]")}>{currentCounts.all}</span>
             </button>
-          ))}
+
+            {filterOptions.map((option) => {
+              const isActive = filters.length === 1 && filters[0] === option.value;
+              return (
+                <button
+                  key={option.value}
+                  onClick={() => updateParams({ filters: isActive ? [] : [option.value], page: 1 })}
+                  className={cn(
+                    "flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium",
+                    isActive
+                      ? "border-[#6f84ba] bg-[#3c589e] text-white"
+                      : "border-[var(--border)] bg-white text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]",
+                  )}
+                >
+                  <span>{option.label}</span>
+                  <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", isActive ? "bg-white/18 text-white" : "bg-[#eef2fb] text-[#3c589e]")}>{option.count}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            disabled={isRefreshing}
+            className="inline-flex items-center gap-2 self-start rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb] disabled:opacity-60 lg:self-auto"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            {isRefreshing ? "Refreshing..." : "Refresh"}
+          </button>
         </div>
 
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -169,18 +179,9 @@ export function MemberDirectory({
             </p>
           </div>
           <div className="flex flex-col gap-3 lg:items-end">
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => void refresh()}
-                disabled={isRefreshing}
-                className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb] disabled:opacity-60"
-              >
-                <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-                {isRefreshing ? "Refreshing..." : "Refresh"}
-              </button>
-              <button onClick={() => updateParams({ view: "grid" })} className={cn("rounded-full border px-4 py-2 text-sm font-medium", view === "grid" ? "border-[#6f84ba] bg-[#3c589e] text-white" : "border-[var(--border)] bg-white text-[var(--foreground)]")}>Grid</button>
-              <button onClick={() => updateParams({ view: "list" })} className={cn("rounded-full border px-4 py-2 text-sm font-medium", view === "list" ? "border-[#6f84ba] bg-[#3c589e] text-white" : "border-[var(--border)] bg-white text-[var(--foreground)]")}>List</button>
+            <div className="grid grid-cols-2 gap-3 md:w-[260px]">
+              <button onClick={() => updateParams({ view: "grid" })} className={cn("rounded-2xl border px-4 py-3 text-sm font-medium", view === "grid" ? "border-[#6f84ba] bg-[#3c589e] text-white" : "border-[var(--border)] bg-white text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]")}>Grid</button>
+              <button onClick={() => updateParams({ view: "list" })} className={cn("rounded-2xl border px-4 py-3 text-sm font-medium", view === "list" ? "border-[#6f84ba] bg-[#3c589e] text-white" : "border-[var(--border)] bg-white text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]")}>List</button>
             </div>
           </div>
         </div>
