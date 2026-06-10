@@ -59,46 +59,69 @@ export async function sendMobileOtpWithFallback({
   clientReference: string;
 }) {
   const started = Date.now();
+  const results: DeliveryResult[] = [];
 
-  const tasks = [
-    runChannel("sms", () => withTimeout(sendSmsOtp({ mobile, otp }), 4000, "SMS send")),
-    runChannel(
+  const pending = new Map<DeliveryChannel, Promise<{ channel: DeliveryChannel; result: DeliveryResult }>>([
+    [
+      "sms",
+      runChannel("sms", () => withTimeout(sendSmsOtp({ mobile, otp }), 4000, "SMS send")).then((result) => ({
+        channel: "sms" as const,
+        result,
+      })),
+    ],
+    [
       "whatsapp",
-      () =>
-        withTimeout(
-          sendOtpMessage({
-            mobile,
-            otp,
-            memberName,
-            purpose: "login",
-            clientReference,
-          }),
-          5000,
-          "WhatsApp send",
-        ),
-    ),
-  ];
+      runChannel(
+        "whatsapp",
+        () =>
+          withTimeout(
+            sendOtpMessage({
+              mobile,
+              otp,
+              memberName,
+              purpose: "login",
+              clientReference,
+            }),
+            5000,
+            "WhatsApp send",
+          ),
+      ).then((result) => ({ channel: "whatsapp" as const, result })),
+    ],
+  ]);
 
-  const results = await Promise.all(tasks);
-  const success = results.find((result) => result.ok);
+  while (pending.size) {
+    const { channel, result } = await Promise.race([...pending.values()]);
+    pending.delete(channel);
+    results.push(result);
+
+    if (result.ok) {
+      console.log(
+        JSON.stringify({
+          type: "member-login-otp-delivery",
+          mobile,
+          results,
+          winner: result.channel,
+          totalMs: Date.now() - started,
+        }),
+      );
+
+      return {
+        accepted: true,
+        primaryChannel: result.channel,
+        results,
+      };
+    }
+  }
 
   console.log(
     JSON.stringify({
       type: "member-login-otp-delivery",
       mobile,
       results,
-      winner: success?.channel ?? null,
+      winner: null,
       totalMs: Date.now() - started,
     }),
   );
 
-  if (!success) {
-    throw new Error("Sending OTP failed. Please try again after some time.");
-  }
-
-  return {
-    accepted: true,
-    primaryChannel: success.channel,
-    results,
-  };
+  throw new Error("Sending OTP failed. Please try again after some time.");
 }
