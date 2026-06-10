@@ -2,7 +2,7 @@ import type { MemberWithVerification } from "@/lib/types";
 import { normalizeMobile } from "@/lib/utils";
 import { addAuditLog } from "@/lib/services/audit-service";
 import { getRequiredSupabaseClient, type MobileLoginOwnerRow } from "@/lib/services/shared-db";
-import { getMemberById, listMembersWithVerification } from "@/lib/services/member-service";
+import { getMemberById, getMembersByIdsWithVerification } from "@/lib/services/member-service";
 
 function getVerificationScore(member: MemberWithVerification) {
   let score = 0;
@@ -17,8 +17,12 @@ function getVerificationScore(member: MemberWithVerification) {
 
 export async function listProfilesByMobile(mobile: string) {
   const normalized = normalizeMobile(mobile);
-  const members = await listMembersWithVerification();
-  return members.filter((member) => normalizeMobile(member.currentMobile) === normalized);
+  if (!normalized) return [];
+  const client = getRequiredSupabaseClient();
+  const { data, error } = await client.from("profiles").select("id").eq("current_mobile", normalized);
+  if (error) throw error;
+  const ids = (data ?? []).map((row) => row.id as string);
+  return getMembersByIdsWithVerification(ids);
 }
 
 export function chooseBestMobileOwner(profiles: MemberWithVerification[]) {

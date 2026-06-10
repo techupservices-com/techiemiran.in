@@ -4,6 +4,8 @@ import { sendEmailOtp } from "@/lib/email";
 import { createOtp } from "@/lib/otp-store";
 import { sendSmsOtp } from "@/lib/sms";
 import { sendOtpMessage } from "@/lib/techup";
+import { normalizeMobile } from "@/lib/utils";
+import { getRequiredSupabaseClient } from "@/lib/services/shared-db";
 
 export async function POST(request: Request) {
   const schema = z.object({
@@ -21,13 +23,22 @@ export async function POST(request: Request) {
     return Response.json({ error: "Mobile login cannot use email OTP delivery." }, { status: 400 });
   }
 
-  const member =
-    body.identifierType === "email"
-      ? await findMemberByEmail(body.identifier)
-      : await ensureMobileLoginOwner(body.identifier);
+  let member;
+  if (body.identifierType === "email") {
+    member = await findMemberByEmail(body.identifier);
+  } else {
+    const client = getRequiredSupabaseClient();
+    const normalized = normalizeMobile(body.identifier);
+    const existsRes = await client.from("profiles").select("id", { count: "exact", head: true }).eq("current_mobile", normalized);
+    if (existsRes.error) throw existsRes.error;
+    if (!existsRes.count) {
+      return Response.json({ error: "The entered mobile number is not present in our records. Please re-check your mobile number to continue, or contact the admin for more help." }, { status: 404 });
+    }
+    member = await ensureMobileLoginOwner(body.identifier);
+  }
 
   if (!member) {
-    return Response.json({ error: "No member found with that mobile number or email address." }, { status: 404 });
+    return Response.json({ error: body.identifierType === "email" ? "The entered email address is not present in our records. Please re-check your email address to continue, or contact the admin for more help." : "The entered mobile number is not present in our records. Please re-check your mobile number to continue, or contact the admin for more help." }, { status: 404 });
   }
 
   if (body.identifierType === "email" && !member.email) {

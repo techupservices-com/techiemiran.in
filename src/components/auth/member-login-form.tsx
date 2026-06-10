@@ -28,8 +28,7 @@ export function MemberLoginForm({
   const router = useRouter();
   const [identifier, setIdentifier] = useState(initialIdentifier);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [requestState, setRequestState] = useState<"idle" | "checking" | "sending" | "sent" | "redirecting">("idle");
 
   const identifierType = useMemo(() => detectIdentifierType(identifier), [identifier]);
   const deliveryChannel = identifierType === "email" ? "email" : "mobile";
@@ -37,7 +36,7 @@ export function MemberLoginForm({
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-    setIsLoading(true);
+    setRequestState("checking");
 
     const response = await fetch("/api/member/auth/request-otp", {
       method: "POST",
@@ -47,12 +46,15 @@ export function MemberLoginForm({
     const payload = await response.json();
 
     if (!response.ok) {
-      setIsLoading(false);
+      setRequestState("idle");
       setError(payload.error ?? "Unable to send OTP.");
       return;
     }
 
-    setIsLoading(false);
+    setRequestState("sending");
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    setRequestState("sent");
+    await new Promise((resolve) => setTimeout(resolve, 250));
 
     const result: MemberOtpRequestResult = {
       identifier,
@@ -65,11 +67,12 @@ export function MemberLoginForm({
     };
 
     if (onSuccess) {
+      setRequestState("idle");
       onSuccess(result);
       return;
     }
 
-    setIsRedirecting(true);
+    setRequestState("redirecting");
 
     const query = new URLSearchParams({
       identifier: result.identifier,
@@ -113,15 +116,19 @@ export function MemberLoginForm({
 
       <button
         type="submit"
-        disabled={isLoading || isRedirecting}
+        disabled={requestState !== "idle"}
         className="w-full rounded-2xl bg-[#3c589e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2f467e] disabled:opacity-60"
       >
-        {isRedirecting
+        {requestState === "redirecting"
           ? "Redirecting..."
-          : isLoading
-          ? deliveryChannel === "email"
-            ? "Sending email OTP..."
-            : "Sending OTP..."
+          : requestState === "sent"
+            ? "OTP Sent..."
+            : requestState === "sending"
+              ? deliveryChannel === "email"
+                ? "Sending email OTP..."
+                : "Sending OTP..."
+              : requestState === "checking"
+                ? "Checking record..."
           : deliveryChannel === "email"
             ? "Send Email OTP"
             : "Send OTP"}
