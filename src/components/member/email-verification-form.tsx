@@ -24,10 +24,22 @@ export function EmailVerificationForm({ initialEmail = "", verified = false }: {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      const payload = await response.json();
+      const raw = await response.text();
+      let payload: { requestId?: string; email?: string; previewCode?: string; error?: string } = {};
+
+      try {
+        payload = JSON.parse(raw);
+      } catch {
+        payload = { error: "Unable to send email OTP. Please try again after some time." };
+      }
 
       if (!response.ok) {
         setMessage(payload.error ?? "Unable to send email OTP.");
+        return;
+      }
+
+      if (!payload.requestId) {
+        setMessage("Unable to send email OTP. Please try again after some time.");
         return;
       }
 
