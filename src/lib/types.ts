@@ -10,6 +10,11 @@ export type IdentifierType = "mobile" | "email";
 export type OtpDeliveryChannel = "mobile" | "sms" | "whatsapp" | "email";
 
 export type VerificationState = "pending" | "verified" | "attention";
+export type MemberDirectoryFilterKey = "verified" | "shared" | "inprogress" | "notstarted";
+export type BroadcastEmailSelectionMode = "selected_visible" | "all_filtered";
+export type BroadcastEmailStatus = "queued" | "processing" | "completed" | "completed_with_errors" | "failed" | "cancelled";
+export type BroadcastEmailBatchStatus = "pending" | "claimed" | "sending" | "retryable" | "completed" | "failed";
+export type BroadcastEmailRecipientStatus = "pending" | "sent_to_provider" | "delivered" | "bounced" | "complained" | "failed" | "skipped";
 
 export interface MemberProfile {
   id: string;
@@ -96,4 +101,82 @@ export interface VerificationChecklist {
 export interface MemberWithVerification extends MemberProfile {
   verification: VerificationChecklist;
   linkedMemberCount: number;
+}
+
+export interface BroadcastEmailRecipientSample {
+  profileId: string;
+  email: string;
+  fullName: string;
+}
+
+export interface BroadcastEmailPreview {
+  totalResolved: number;
+  totalValid: number;
+  totalSkipped: number;
+  samples: BroadcastEmailRecipientSample[];
+}
+
+export interface BroadcastEmailRecipient {
+  id: string;
+  broadcastEmailId: string;
+  batchId?: string;
+  profileId?: string;
+  email: string;
+  fullName: string;
+  status: BroadcastEmailRecipientStatus;
+  skipReason?: string | null;
+  providerMessageId?: string | null;
+  providerLastEvent?: string | null;
+  errorMessage?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BroadcastEmailBatch {
+  id: string;
+  broadcastEmailId: string;
+  sequenceNo: number;
+  status: BroadcastEmailBatchStatus;
+  recipientCount: number;
+  processedCount: number;
+  successCount: number;
+  failureCount: number;
+  attemptCount: number;
+  claimedAt?: string | null;
+  claimExpiresAt?: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  idempotencyKey: string;
+  lastError?: string | null;
+}
+
+export interface BroadcastEmailCampaign {
+  id: string;
+  createdBy: string;
+  selectionMode: BroadcastEmailSelectionMode;
+  queryText: string;
+  filterFlags: MemberDirectoryFilterKey[];
+  templateKey: string;
+  subject: string;
+  bodyHtml: string;
+  bodyText: string;
+  status: BroadcastEmailStatus;
+  totalResolved: number;
+  totalValid: number;
+  totalSkipped: number;
+  totalBatches: number;
+  batchesCompleted: number;
+  sentToProviderCount: number;
+  deliveredCount: number;
+  bouncedCount: number;
+  complainedCount: number;
+  failedCount: number;
+  lastError?: string | null;
+  createdAt: string;
+  startedAt?: string | null;
+  completedAt?: string | null;
+}
+
+export interface BroadcastEmailCampaignDetail extends BroadcastEmailCampaign {
+  batches: BroadcastEmailBatch[];
 }

@@ -103,6 +103,67 @@ create table if not exists member_verification_snapshot (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists broadcast_emails (
+  id uuid primary key default gen_random_uuid(),
+  created_by text not null,
+  selection_mode text not null check (selection_mode in ('selected_visible', 'all_filtered')),
+  query_text text not null default '',
+  filter_flags text[] not null default '{}',
+  template_key text not null,
+  subject text not null,
+  body_html text not null,
+  body_text text not null,
+  status text not null default 'queued' check (status in ('queued', 'processing', 'completed', 'completed_with_errors', 'failed', 'cancelled')),
+  total_resolved integer not null default 0,
+  total_valid integer not null default 0,
+  total_skipped integer not null default 0,
+  total_batches integer not null default 0,
+  batches_completed integer not null default 0,
+  sent_to_provider_count integer not null default 0,
+  delivered_count integer not null default 0,
+  bounced_count integer not null default 0,
+  complained_count integer not null default 0,
+  failed_count integer not null default 0,
+  last_error text,
+  created_at timestamptz not null default now(),
+  started_at timestamptz,
+  completed_at timestamptz
+);
+
+create table if not exists broadcast_email_batches (
+  id uuid primary key default gen_random_uuid(),
+  broadcast_email_id uuid not null references broadcast_emails(id) on delete cascade,
+  sequence_no integer not null,
+  status text not null default 'pending' check (status in ('pending', 'claimed', 'sending', 'retryable', 'completed', 'failed')),
+  recipient_count integer not null default 0,
+  processed_count integer not null default 0,
+  success_count integer not null default 0,
+  failure_count integer not null default 0,
+  attempt_count integer not null default 0,
+  claimed_at timestamptz,
+  claim_expires_at timestamptz,
+  started_at timestamptz,
+  completed_at timestamptz,
+  idempotency_key text not null,
+  last_error text
+);
+
+create table if not exists broadcast_email_recipients (
+  id uuid primary key default gen_random_uuid(),
+  broadcast_email_id uuid not null references broadcast_emails(id) on delete cascade,
+  batch_id uuid references broadcast_email_batches(id) on delete set null,
+  profile_id uuid references profiles(id) on delete set null,
+  email text not null,
+  full_name text not null,
+  status text not null default 'pending' check (status in ('pending', 'sent_to_provider', 'delivered', 'bounced', 'complained', 'failed', 'skipped')),
+  skip_reason text,
+  provider_message_id text,
+  provider_last_event text,
+  error_message text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create index if not exists idx_mvs_membership_id on member_verification_snapshot (membership_id);
 create index if not exists idx_mvs_full_name on member_verification_snapshot (full_name);
 create index if not exists idx_mvs_current_mobile on member_verification_snapshot (current_mobile);
@@ -110,6 +171,11 @@ create index if not exists idx_mvs_email on member_verification_snapshot (email)
 create index if not exists idx_mvs_completed on member_verification_snapshot (completed);
 create index if not exists idx_mvs_shared_mobile_pending on member_verification_snapshot (shared_mobile_pending);
 create index if not exists idx_mvs_updated_at on member_verification_snapshot (updated_at desc);
+create index if not exists idx_broadcast_emails_status_created_at on broadcast_emails (status, created_at desc);
+create index if not exists idx_broadcast_email_batches_campaign_status_seq on broadcast_email_batches (broadcast_email_id, status, sequence_no);
+create index if not exists idx_broadcast_email_batches_status_claim on broadcast_email_batches (status, claim_expires_at);
+create index if not exists idx_broadcast_email_recipients_campaign_batch_status on broadcast_email_recipients (broadcast_email_id, batch_id, status);
+create unique index if not exists idx_broadcast_email_recipients_provider_message_id on broadcast_email_recipients (provider_message_id) where provider_message_id is not null;
 
 create or replace view verification_status as
 select

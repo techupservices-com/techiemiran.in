@@ -1,5 +1,6 @@
 export * from "@/lib/services/audit-service";
 export * from "@/lib/services/admin-service";
+export * from "@/lib/services/broadcast-email-service";
 export * from "@/lib/services/document-service";
 export * from "@/lib/services/member-service";
 export * from "@/lib/services/ownership-service";

@@ -110,6 +110,67 @@ export interface MemberVerificationSnapshotRow {
   updated_at: string;
 }
 
+export interface BroadcastEmailRow {
+  id: string;
+  created_by: string;
+  selection_mode: "selected_visible" | "all_filtered";
+  query_text: string;
+  filter_flags: string[] | null;
+  template_key: string;
+  subject: string;
+  body_html: string;
+  body_text: string;
+  status: "queued" | "processing" | "completed" | "completed_with_errors" | "failed" | "cancelled";
+  total_resolved: number;
+  total_valid: number;
+  total_skipped: number;
+  total_batches: number;
+  batches_completed: number;
+  sent_to_provider_count: number;
+  delivered_count: number;
+  bounced_count: number;
+  complained_count: number;
+  failed_count: number;
+  last_error: string | null;
+  created_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
+export interface BroadcastEmailBatchRow {
+  id: string;
+  broadcast_email_id: string;
+  sequence_no: number;
+  status: "pending" | "claimed" | "sending" | "retryable" | "completed" | "failed";
+  recipient_count: number;
+  processed_count: number;
+  success_count: number;
+  failure_count: number;
+  attempt_count: number;
+  claimed_at: string | null;
+  claim_expires_at: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  idempotency_key: string;
+  last_error: string | null;
+}
+
+export interface BroadcastEmailRecipientRow {
+  id: string;
+  broadcast_email_id: string;
+  batch_id: string | null;
+  profile_id: string | null;
+  email: string;
+  full_name: string;
+  status: "pending" | "sent_to_provider" | "delivered" | "bounced" | "complained" | "failed" | "skipped";
+  skip_reason: string | null;
+  provider_message_id: string | null;
+  provider_last_event: string | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export function getRequiredSupabaseClient() {
   const client = createServerSupabaseClient();
   if (!client) {
