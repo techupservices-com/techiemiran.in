@@ -19,3 +19,7 @@ Responsive Next.js portal for member verification, admin member management, What
 ## Environment
 
 Copy `.env.example` to `.env.local` and provide the required values before connecting live Supabase and TechUpServices.
+
+## Deployment
+
+Production is served at `https://www.pclprofile.com`.
