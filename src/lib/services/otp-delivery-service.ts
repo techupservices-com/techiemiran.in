@@ -59,9 +59,9 @@ export async function sendMobileOtpWithFallback({
   clientReference: string;
 }) {
   const started = Date.now();
-  const results: DeliveryResult[] = [];
+  const results = new Map<DeliveryChannel, DeliveryResult>();
 
-  const pending = new Map<DeliveryChannel, Promise<{ channel: DeliveryChannel; result: DeliveryResult }>>([
+  const channelEntries: Array<[DeliveryChannel, Promise<{ channel: DeliveryChannel; result: DeliveryResult }>]> = [
     [
       "sms",
       runChannel("sms", () => withTimeout(sendSmsOtp({ mobile, otp }), 4000, "SMS send")).then((result) => ({
@@ -87,19 +87,40 @@ export async function sendMobileOtpWithFallback({
           ),
       ).then((result) => ({ channel: "whatsapp" as const, result })),
     ],
-  ]);
+  ];
+
+  const pending = new Map<DeliveryChannel, Promise<{ channel: DeliveryChannel; result: DeliveryResult }>>(channelEntries);
+
+  const allChannelsPromise = Promise.all(channelEntries.map(([, promise]) => promise)).then((entries) => {
+    for (const entry of entries) {
+      results.set(entry.channel, entry.result);
+    }
+    return entries.map((entry) => entry.result);
+  });
 
   while (pending.size) {
     const { channel, result } = await Promise.race([...pending.values()]);
     pending.delete(channel);
-    results.push(result);
+    results.set(channel, result);
 
     if (result.ok) {
+      void allChannelsPromise.then((finalResults) => {
+        console.log(
+          JSON.stringify({
+            type: "member-login-otp-delivery",
+            mobile,
+            results: finalResults,
+            winner: result.channel,
+            totalMs: Date.now() - started,
+          }),
+        );
+      });
+
       console.log(
         JSON.stringify({
-          type: "member-login-otp-delivery",
+          type: "member-login-otp-delivery-early-success",
           mobile,
-          results,
+          results: Array.from(results.values()),
           winner: result.channel,
           totalMs: Date.now() - started,
         }),
@@ -108,16 +129,17 @@ export async function sendMobileOtpWithFallback({
       return {
         accepted: true,
         primaryChannel: result.channel,
-        results,
+        results: Array.from(results.values()),
       };
     }
   }
 
+  const finalResults = await allChannelsPromise;
   console.log(
     JSON.stringify({
       type: "member-login-otp-delivery",
       mobile,
-      results,
+      results: finalResults,
       winner: null,
       totalMs: Date.now() - started,
     }),
