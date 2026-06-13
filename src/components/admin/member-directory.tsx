@@ -17,6 +17,7 @@ import type {
 import { cn, formatMobile } from "@/lib/utils";
 
 const TEMPLATE_SUBJECT = "Complete your Poona Club verification";
+const SHOW_BULK_EMAIL = false;
 const TEMPLATE_SAMPLE = {
   html: `<p>Hi Member,</p><p>This is a reminder to complete your Poona Club verification on <a href="https://www.pclprofile.com">pclprofile.com</a>.</p><p>Please log in with your registered email address or mobile number and finish the pending steps at the earliest.</p><p>Thank you,<br />Poona Club</p>`,
   text: "Hi Member,\n\nThis is a reminder to complete your Poona Club verification on https://www.pclprofile.com. Please log in with your registered email address or mobile number and finish the pending steps at the earliest.\n\nThank you,\nPoona Club",
@@ -324,33 +325,35 @@ export function MemberDirectory({
           </div>
         </div>
 
-        <div className="soft-card rounded-[24px] p-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">Bulk email</p>
-              <p className="mt-2 text-sm text-[var(--muted)]">Select visible members or send a reminder to all members in the current filtered result set.</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button onClick={toggleSelectVisible} className="rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]">
-                {allVisibleSelected ? "Clear visible" : "Select visible"}
-              </button>
-              <button disabled={!selectedIds.length} onClick={() => void openCampaignModal("selected_visible")} className="rounded-full bg-[#3c589e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2f467e] disabled:cursor-not-allowed disabled:opacity-50">
-                Email selected ({selectedIds.length})
-              </button>
-              <button disabled={currentTotal === 0} onClick={() => void openCampaignModal("all_filtered")} className="rounded-full border border-[#6f84ba] bg-[#eef2fb] px-4 py-2 text-sm font-semibold text-[#3c589e] hover:bg-[#dfe7f8] disabled:cursor-not-allowed disabled:opacity-50">
-                Email all filtered ({currentTotal})
-              </button>
-              <button
-                onClick={() => setShowRecentCampaigns((current) => !current)}
-                className="rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]"
-              >
-                {showRecentCampaigns ? "Hide recent campaigns" : "Recent campaigns"}
-              </button>
+        {SHOW_BULK_EMAIL ? (
+          <div className="soft-card rounded-[24px] p-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="font-mono text-xs uppercase tracking-[0.24em] text-[#3c589e]">Bulk email</p>
+                <p className="mt-2 text-sm text-[var(--muted)]">Select visible members or send a reminder to all members in the current filtered result set.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={toggleSelectVisible} className="rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]">
+                  {allVisibleSelected ? "Clear visible" : "Select visible"}
+                </button>
+                <button disabled={!selectedIds.length} onClick={() => void openCampaignModal("selected_visible")} className="rounded-full bg-[#3c589e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2f467e] disabled:cursor-not-allowed disabled:opacity-50">
+                  Email selected ({selectedIds.length})
+                </button>
+                <button disabled={currentTotal === 0} onClick={() => void openCampaignModal("all_filtered")} className="rounded-full border border-[#6f84ba] bg-[#eef2fb] px-4 py-2 text-sm font-semibold text-[#3c589e] hover:bg-[#dfe7f8] disabled:cursor-not-allowed disabled:opacity-50">
+                  Email all filtered ({currentTotal})
+                </button>
+                <button
+                  onClick={() => setShowRecentCampaigns((current) => !current)}
+                  className="rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]"
+                >
+                  {showRecentCampaigns ? "Hide recent campaigns" : "Recent campaigns"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        ) : null}
 
-        {showRecentCampaigns ? (
+        {SHOW_BULK_EMAIL && showRecentCampaigns ? (
           <div className="soft-card rounded-[24px] p-5">
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
