@@ -398,13 +398,6 @@ export function MemberDirectory({
             const isSelected = selectedIds.includes(member.id);
             return (
               <article key={member.id} className={cn("soft-card rounded-[24px] p-5", isSelected && "ring-2 ring-[#6f84ba]", view === "list" && "md:flex md:items-start md:justify-between md:gap-6")}>
-                <div className="mb-4 flex items-center justify-between gap-2">
-                  <label className="inline-flex items-center gap-2 text-sm font-medium text-[var(--foreground)]">
-                    <input type="checkbox" checked={isSelected} onChange={() => toggleSelected(member.id)} className="h-4 w-4 rounded border-[var(--border)] text-[#3c589e]" />
-                    Select member
-                  </label>
-                  <StatusChip label={member.verification.completed ? "Verified" : "In progress"} tone={member.verification.completed ? "success" : "warning"} />
-                </div>
                 {view === "grid" ? (
                   <>
                     <div className="overflow-hidden rounded-[22px] border border-[var(--border)] bg-[#eef2fb]">
@@ -412,9 +405,10 @@ export function MemberDirectory({
                     </div>
                     <div className="mt-4 min-w-0">
                       <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
+                        <div className="min-w-0">
                           <h3 className="text-xl font-semibold text-[var(--foreground)]">{member.fullName}</h3>
                         </div>
+                        <StatusChip label={member.verification.completed ? "Verified" : "In progress"} tone={member.verification.completed ? "success" : "warning"} />
                       </div>
                       <p className="mt-2 text-sm text-[var(--muted)]">{member.membershipId} · {member.memberType}</p>
                       <div className="mt-4 space-y-2 text-sm">
@@ -426,36 +420,49 @@ export function MemberDirectory({
                           <StatusChip label={member.verification.selfieUploaded ? "Selfie uploaded" : "Selfie pending"} tone={member.verification.selfieUploaded ? "success" : "warning"} />
                         </div>
                       </div>
-                      <div className="mt-5 flex gap-2">
-                        <Link href={`/admin/members/${member.id}`} className="rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]">View</Link>
-                        <Link href={`/admin/members/${member.id}/edit`} className="rounded-full bg-stone-200 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-300">Edit</Link>
+                      <div className="mt-5 flex items-center justify-between gap-3">
+                        <label className="inline-flex items-center gap-2 text-sm font-medium text-[var(--foreground)]">
+                          <input type="checkbox" checked={isSelected} onChange={() => toggleSelected(member.id)} className="h-4 w-4 rounded border-[var(--border)] text-[#3c589e]" />
+                          Select member
+                        </label>
+                        <div className="flex gap-2">
+                          <Link href={`/admin/members/${member.id}`} className="rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]">View</Link>
+                          <Link href={`/admin/members/${member.id}/edit`} className="rounded-full bg-stone-200 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-300">Edit</Link>
+                        </div>
                       </div>
                     </div>
                   </>
                 ) : (
-                  <div className="flex gap-4">
-                    <AvatarBadge name={member.fullName} photoUrl={member.photoUrl} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-start justify-between gap-2">
-                        <h3 className="text-lg font-semibold text-[var(--foreground)]">{member.fullName}</h3>
+                  <div className="flex-1">
+                    <div className="flex gap-4">
+                      <AvatarBadge name={member.fullName} photoUrl={member.photoUrl} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <h3 className="text-lg font-semibold text-[var(--foreground)]">{member.fullName}</h3>
+                          <StatusChip label={member.verification.completed ? "Verified" : "In progress"} tone={member.verification.completed ? "success" : "warning"} />
+                        </div>
+                        <p className="mt-2 text-sm text-[var(--muted)]">{member.membershipId} · {member.memberType}</p>
+                        <p className="mt-3 text-sm text-[var(--muted)]">{member.email}</p>
+                        <p className="mt-2 text-sm text-[var(--foreground)]">{formatMobile(member.currentMobile)}</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <StatusChip label={member.verification.mobileVerified ? "Mobile verified" : "Mobile pending"} tone={member.verification.mobileVerified ? "success" : "warning"} />
+                          <StatusChip label={member.verification.emailVerified ? "Email verified" : "Email pending"} tone={member.verification.emailVerified ? "success" : "warning"} />
+                          <StatusChip label={member.verification.selfieUploaded ? "Selfie uploaded" : "Selfie pending"} tone={member.verification.selfieUploaded ? "success" : "warning"} />
+                        </div>
                       </div>
-                      <p className="mt-2 text-sm text-[var(--muted)]">{member.membershipId} · {member.memberType}</p>
-                      <p className="mt-3 text-sm text-[var(--muted)]">{member.email}</p>
-                      <p className="mt-2 text-sm text-[var(--foreground)]">{formatMobile(member.currentMobile)}</p>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <StatusChip label={member.verification.mobileVerified ? "Mobile verified" : "Mobile pending"} tone={member.verification.mobileVerified ? "success" : "warning"} />
-                        <StatusChip label={member.verification.emailVerified ? "Email verified" : "Email pending"} tone={member.verification.emailVerified ? "success" : "warning"} />
-                        <StatusChip label={member.verification.selfieUploaded ? "Selfie uploaded" : "Selfie pending"} tone={member.verification.selfieUploaded ? "success" : "warning"} />
+                    </div>
+                    <div className="mt-4 flex items-center justify-between gap-3">
+                      <label className="inline-flex items-center gap-2 text-sm font-medium text-[var(--foreground)]">
+                        <input type="checkbox" checked={isSelected} onChange={() => toggleSelected(member.id)} className="h-4 w-4 rounded border-[var(--border)] text-[#3c589e]" />
+                        Select member
+                      </label>
+                      <div className="flex gap-2">
+                        <Link href={`/admin/members/${member.id}`} className="rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]">View</Link>
+                        <Link href={`/admin/members/${member.id}/edit`} className="rounded-full bg-stone-200 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-300">Edit</Link>
                       </div>
                     </div>
                   </div>
                 )}
-                {view === "list" ? (
-                  <div className="mt-4 flex gap-2 md:mt-0 md:flex-col">
-                    <Link href={`/admin/members/${member.id}`} className="rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:border-[#6f84ba] hover:bg-[#eef2fb]">View</Link>
-                    <Link href={`/admin/members/${member.id}/edit`} className="rounded-full bg-stone-200 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-300">Edit</Link>
-                  </div>
-                ) : null}
               </article>
             );
           })}
